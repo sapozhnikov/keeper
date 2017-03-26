@@ -25,26 +25,26 @@ bool IsDirectory(const Dbt& rec)
 		return false;
 }
 
-void TaskRestore::RestoreFromMirrorFolder(const Dbt & key, const Dbt& data)
-{
-	std::wstring relativePath = keeper::DbtToWstring(key);
-	std::wstring destinationFullPath = ctx_.GetDestinationDirectory() + relativePath;
-	bool restoreResult;
-
-	if (IsDirectory(data))
-	{
-		if (boost::filesystem::exists(destinationFullPath))
-			restoreResult = true;
-		else
-			restoreResult = keeper::FileIO::CreateDir(destinationFullPath);
-	}
-	else
-	{
-		restoreResult = keeper::FileIO::CopySingleFile(ctx_.GetSourceDirectory() + MIRROR_SUB_DIR + relativePath, destinationFullPath);
-	}
-	if (restoreResult)
-		SetFileAttributes(destinationFullPath.c_str(), static_cast<DbFileEvent*>(data.get_data())->FileAttributes.dwFileAttributes);
-}
+//void TaskRestore::RestoreFromMirrorFolder(const Dbt & key, const Dbt& data)
+//{
+//	std::wstring relativePath = keeper::DbtToWstring(key);
+//	std::wstring destinationFullPath = ctx_.GetDestinationDirectory() + relativePath;
+//	bool restoreResult;
+//
+//	if (IsDirectory(data))
+//	{
+//		if (boost::filesystem::exists(destinationFullPath))
+//			restoreResult = true;
+//		else
+//			restoreResult = keeper::FileIO::CreateDir(destinationFullPath);
+//	}
+//	else
+//	{
+//		restoreResult = keeper::FileIO::CopySingleFile(ctx_.GetSourceDirectory() + MIRROR_SUB_DIR + relativePath, destinationFullPath);
+//	}
+//	if (restoreResult)
+//		SetFileAttributes(destinationFullPath.c_str(), static_cast<DbFileEvent*>(data.get_data())->FileAttributes.dwFileAttributes);
+//}
 
 void TaskRestore::RestoreFromMirrorFolder(const Dbt & key, const DbFileEvent& data)
 {
@@ -67,30 +67,30 @@ void TaskRestore::RestoreFromMirrorFolder(const Dbt & key, const DbFileEvent& da
 		SetFileAttributes(destinationFullPath.c_str(), data.FileAttributes.dwFileAttributes);
 }
 
-void TaskRestore::RestoreFromEventFolder(const Dbt & key, const Dbt & data)
-{
-	DbFileEvent* pEvent = static_cast<DbFileEvent*>(data.get_data());
-	boost::posix_time::ptime storeOldTimestamp = keeper::ConvertMillisecToPtime(pEvent->EventTimeStamp);
-
-	std::wstring relativePath = keeper::DbtToWstring(key);
-	std::wstring storeOldFullPath = ctx_.GetSourceDirectory() + keeper::PTimeToWstringSafeSymbols(storeOldTimestamp) + L'\\' + relativePath;
-	std::wstring destinationFullPath = ctx_.GetDestinationDirectory() + relativePath;
-	bool restoreResult;
-
-	if (IsDirectory(data))
-	{
-		if (boost::filesystem::exists(destinationFullPath))
-			restoreResult = true;
-		else
-			restoreResult = keeper::FileIO::CreateDir(destinationFullPath);
-	}
-	else
-	{
-		restoreResult = keeper::FileIO::CopySingleFile(storeOldFullPath, destinationFullPath);
-	}
-	if (restoreResult)
-		SetFileAttributes(destinationFullPath.c_str(), static_cast<DbFileEvent*>(data.get_data())->FileAttributes.dwFileAttributes);
-}
+//void TaskRestore::RestoreFromEventFolder(const Dbt & key, const Dbt & data)
+//{
+//	DbFileEvent* pEvent = static_cast<DbFileEvent*>(data.get_data());
+//	boost::posix_time::ptime storeOldTimestamp = keeper::ConvertMillisecToPtime(pEvent->EventTimeStamp);
+//
+//	std::wstring relativePath = keeper::DbtToWstring(key);
+//	std::wstring storeOldFullPath = ctx_.GetSourceDirectory() + keeper::PTimeToWstringSafeSymbols(storeOldTimestamp) + L'\\' + relativePath;
+//	std::wstring destinationFullPath = ctx_.GetDestinationDirectory() + relativePath;
+//	bool restoreResult;
+//
+//	if (IsDirectory(data))
+//	{
+//		if (boost::filesystem::exists(destinationFullPath))
+//			restoreResult = true;
+//		else
+//			restoreResult = keeper::FileIO::CreateDir(destinationFullPath);
+//	}
+//	else
+//	{
+//		restoreResult = keeper::FileIO::CopySingleFile(storeOldFullPath, destinationFullPath);
+//	}
+//	if (restoreResult)
+//		SetFileAttributes(destinationFullPath.c_str(), static_cast<DbFileEvent*>(data.get_data())->FileAttributes.dwFileAttributes);
+//}
 
 void TaskRestore::RestoreFromEventFolder(const Dbt & key, const DbFileEvent& data)
 {
@@ -142,7 +142,7 @@ bool TaskRestore::Run()
 		ctx_.CloseDatabase();
 	};
 
-	Dbt keyMain, dataMain, dataMainPrev;
+	Dbt keyMain, dataMain/*, dataMainPrev*/;
 	DbFileEvent fileEvent = { 0 }, fileEventPrev = { 0 };
 
 	Dbt dataNext;
@@ -227,7 +227,7 @@ bool TaskRestore::Run()
 				//seek till the end
 			}
 			//proceed to the next event
-			dataMainPrev = dataMain;
+			//dataMainPrev = dataMain;
 			fileEventPrev = fileEvent;
 			isFirstEvent = false;
 
@@ -245,8 +245,8 @@ bool TaskRestore::Run()
 			//if (timestamp == not_a_date_time)
 			{
 				//ReplayLastEvent(keyMain, dataMain);
-				if (GetEventType(dataMainPrev) != FileEventType::Deleted)
-					RestoreFromMirrorFolder(keyMain, dataMainPrev);
+				if (static_cast<FileEventType>(fileEventPrev.FileEvent) != FileEventType::Deleted)
+					RestoreFromMirrorFolder(keyMain, fileEventPrev);
 			}
 		}
 	}//while

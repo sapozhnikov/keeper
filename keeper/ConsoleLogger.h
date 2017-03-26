@@ -45,6 +45,7 @@ namespace ConsoleLogger
 	{
 	public:
 		LogLevel CurrentLogLevel;
+		LogLevel MaxLogLevelPrinted = LogLevel::trace; // keep it for program return code
 		bool AddTimestamp = false;
 		bool AddLogLevelName = false;
 
@@ -66,6 +67,7 @@ namespace ConsoleLogger
 	void SetLogLevel(LogLevel lvl);
 	void SetAttrLogLevelVisible(bool b);
 	void SetAttrTimestampVisible(bool b);
+	LogLevel GetMaxLogLevelPrinted();
 
 	//Base class for other loggers
 	template<std::ostream& OSTREAM, LogLevel LOGLEVEL>
@@ -123,7 +125,12 @@ namespace ConsoleLogger
 			if (LOGLEVEL == LogLevel::mandatory)
 				return true;
 			else
-				return LogConfig::GetInstance().CurrentLogLevel <= LOGLEVEL;
+			{
+				LogConfig& inst = LogConfig::GetInstance();
+				if (inst.MaxLogLevelPrinted < LOGLEVEL)
+					inst.MaxLogLevelPrinted = LOGLEVEL;
+				return inst.CurrentLogLevel <= LOGLEVEL;
+			}
 		}
 
 		std::string convertWStringToString(const std::wstring& source)

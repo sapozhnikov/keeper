@@ -40,11 +40,9 @@ namespace FileIO
 	{
 		boost::system::error_code errorCode;
 
-#ifdef _DEBUG
-		LOG_TRACE() << "Copying file from " << source.wstring() << " to " << destination.wstring() << std::endl;
-#endif
-		boost::filesystem::create_directories(boost::filesystem::path(destination).parent_path());
+		LOG_VERBOSE() << "Copying file from " << source.wstring() << " to " << destination.wstring() << std::endl;
 
+		boost::filesystem::create_directories(boost::filesystem::path(destination).parent_path());
 		if (failIfExists)
 			boost::filesystem::copy_file(source, destination, boost::filesystem::copy_option::fail_if_exists, errorCode);
 		else
@@ -95,9 +93,8 @@ namespace FileIO
 	{
 		boost::system::error_code errorCode;
 
-#ifdef _DEBUG
-		LOG_TRACE() << "Moving file from " << source.wstring() << " to " << destination.wstring() << std::endl;
-#endif
+		LOG_VERBOSE() << "Moving file from " << source.wstring() << " to " << destination.wstring() << std::endl;
+
 		boost::filesystem::create_directories(boost::filesystem::path(destination).parent_path(), errorCode);
 		if (errorCode)
 		{
@@ -118,9 +115,8 @@ namespace FileIO
 	{
 		boost::system::error_code errorCode;
 
-#ifdef _DEBUG
-		LOG_TRACE() << "Deleting directory " << dir.wstring() << std::endl;
-#endif
+		LOG_VERBOSE() << "Deleting directory " << dir.wstring() << std::endl;
+
 		RemoveReadOnlyAttribute(dir);
 		boost::filesystem::remove_all(dir, errorCode);
 		if (errorCode)
@@ -136,9 +132,8 @@ namespace FileIO
 	{
 		boost::system::error_code errorCode;
 
-#ifdef _DEBUG
-		LOG_TRACE() << "Creating directory " << dir.wstring() << std::endl;
-#endif
+		LOG_VERBOSE() << "Creating directory " << dir.wstring() << std::endl;
+
 		//boost::filesystem::create_directories(dir.parent_path()); //!
 		boost::filesystem::create_directories(dir, errorCode);
 		if (!errorCode)
@@ -154,9 +149,8 @@ namespace FileIO
 	{
 		boost::system::error_code errorCode;
 
-#ifdef _DEBUG
-		LOG_TRACE() << "Copying directory from " << source.wstring() << " to " << destination.wstring() << std::endl;
-#endif
+		LOG_VERBOSE() << "Copying directory from " << source.wstring() << " to " << destination.wstring() << std::endl;
+
 		boost::filesystem::copy_directory(source, destination, errorCode);
 		if (!errorCode)
 			return true;

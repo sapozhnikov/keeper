@@ -11,8 +11,8 @@ public:
 private:
 	keeper::TaskContext& ctx_;
 	
-	void RestoreFromMirrorFolder(const Dbt& key, const Dbt& data);
-	void RestoreFromEventFolder(const Dbt& key, const Dbt& data);
+	//void RestoreFromMirrorFolder(const Dbt& key, const Dbt& data);
+	//void RestoreFromEventFolder(const Dbt& key, const Dbt& data);
 	void RestoreFromEventFolder(const Dbt & key, const DbFileEvent& data);
 	void RestoreFromMirrorFolder(const Dbt & key, const DbFileEvent& data);
 };

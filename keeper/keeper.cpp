@@ -25,47 +25,61 @@ int wmain(int argc, wchar_t *argv[])
 	SetAttrTimestampVisible(true);
 #endif
 
-	switch (taskCtx.Task)
+	try
 	{
-	case keeper::Task::Backup:
-	{
-		TaskBackup taskBackup(taskCtx);
-		taskBackup.Run();
-	}
-	break;
-	
-	case keeper::Task::DumpDB:
-	{
-		TaskDumpDB taskDump(taskCtx);
-		taskDump.Run();
-	}
-	break;
-
-	case keeper::Task::Restore:
-	{
-		TaskRestore taskRestore(taskCtx);
-		taskRestore.Run();
-	}
-	break;
-
-	case keeper::Task::List:
-	{
-		TaskList taskList(taskCtx);
-		taskList.Run();
-	}
-	break;
-
-	case keeper::Task::Purge:
-	{
-		TaskPurge taskPurge(taskCtx);
-		taskPurge.Run();
-	}
-	break;
-
-	default:
+		switch (taskCtx.Task)
+		{
+		case keeper::Task::Backup:
+		{
+			TaskBackup taskBackup(taskCtx);
+			taskBackup.Run();
+		}
 		break;
+
+		case keeper::Task::DumpDB:
+		{
+			TaskDumpDB taskDump(taskCtx);
+			taskDump.Run();
+		}
+		break;
+
+		case keeper::Task::Restore:
+		{
+			TaskRestore taskRestore(taskCtx);
+			taskRestore.Run();
+		}
+		break;
+
+		case keeper::Task::List:
+		{
+			TaskList taskList(taskCtx);
+			taskList.Run();
+		}
+		break;
+
+		case keeper::Task::Purge:
+		{
+			TaskPurge taskPurge(taskCtx);
+			taskPurge.Run();
+		}
+		break;
+
+		default:
+			break;
+		}
+	}
+	catch (DbException& e)
+	{
+		LOG_FATAL() << "DB error: " << e.what() << endl;
+	}
+	catch (exception& e)
+	{
+		LOG_FATAL() << e.what();
 	}
 
-	return 0;
+	if (GetMaxLogLevelPrinted() > LogLevel::warning)
+		return -1;
+	else
+		return 0;
 }
 

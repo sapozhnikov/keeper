@@ -19,6 +19,11 @@ namespace ConsoleLogger
 		LogConfig::GetInstance().AddTimestamp = b;
 	}
 
+	LogLevel ConsoleLogger::GetMaxLogLevelPrinted()
+	{
+		return LogConfig::GetInstance().MaxLogLevelPrinted;
+	}
+
 	LogTrace& LOG_TRACE()
 	{
 		LogTrace& inst = LogTrace::GetInstance();
