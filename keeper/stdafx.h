@@ -19,3 +19,7 @@
 #include "CommonDefinitions.h"
 #include "ConsoleLogger.h"
 #include <boost\date_time\posix_time\posix_time.hpp>
+
+#define SODIUM_STATIC 1
+#define SODIUM_EXPORT
+#include <sodium.h>

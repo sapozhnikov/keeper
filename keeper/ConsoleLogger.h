@@ -138,12 +138,12 @@ namespace ConsoleLogger
 			if (source.empty())
 				return std::string();
 
-			int length = ::WideCharToMultiByte(CP_OEMCP, 0, source.data(), source.length(), NULL, 0, NULL, NULL);
+			int length = ::WideCharToMultiByte(CP_OEMCP, 0, source.data(), (int)source.length(), NULL, 0, NULL, NULL);
 			if (length <= 0)
 				return std::string();
 
 			std::vector<char> buffer(length);
-			::WideCharToMultiByte(CP_OEMCP, 0, source.data(), source.length(), &buffer[0], length, NULL, NULL);
+			::WideCharToMultiByte(CP_OEMCP, 0, source.data(), (int)source.length(), &buffer[0], length, NULL, NULL);
 
 			return std::string(buffer.begin(), buffer.end());
 		}

@@ -19,6 +19,12 @@
     <Filter Include="Source Files\tasks">
       <UniqueIdentifier>{e6ceca98-5fd5-4080-95a3-488536ebcbc5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\FilesTransform">
+      <UniqueIdentifier>{d0b7acdd-92f5-46c2-8107-5c578621bd60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\FilesTransform">
+      <UniqueIdentifier>{8957d651-2062-409c-922c-3495de3d6e42}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -45,9 +51,6 @@
     <ClInclude Include="CommonDefinitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TaskList.h">
-      <Filter>Header Files\tasks</Filter>
-    </ClInclude>
     <ClInclude Include="ConsoleLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -62,6 +65,18 @@
     </ClInclude>
     <ClInclude Include="TaskContext.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PathEncoder.h">
+      <Filter>Header Files\FilesTransform</Filter>
+    </ClInclude>
+    <ClInclude Include="utf16_compress.h">
+      <Filter>Header Files\FilesTransform</Filter>
+    </ClInclude>
+    <ClInclude Include="FilesTransformer.h">
+      <Filter>Header Files\FilesTransform</Filter>
+    </ClInclude>
+    <ClInclude Include="ChaChaFilter.h">
+      <Filter>Header Files\FilesTransform</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -86,9 +101,6 @@
     <ClCompile Include="TaskRestore.cpp">
       <Filter>Source Files\tasks</Filter>
     </ClCompile>
-    <ClCompile Include="TaskList.cpp">
-      <Filter>Source Files\tasks</Filter>
-    </ClCompile>
     <ClCompile Include="ConsoleLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -100,6 +112,15 @@
     </ClCompile>
     <ClCompile Include="TaskContext.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PathEncoder.cpp">
+      <Filter>Source Files\FilesTransform</Filter>
+    </ClCompile>
+    <ClCompile Include="utf16_compress.cpp">
+      <Filter>Source Files\FilesTransform</Filter>
+    </ClCompile>
+    <ClCompile Include="FilesTransformer.cpp">
+      <Filter>Source Files\FilesTransform</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

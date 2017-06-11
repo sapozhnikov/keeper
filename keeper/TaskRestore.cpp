@@ -25,79 +25,52 @@ bool IsDirectory(const Dbt& rec)
 		return false;
 }
 
-//void TaskRestore::RestoreFromMirrorFolder(const Dbt & key, const Dbt& data)
-//{
-//	std::wstring relativePath = keeper::DbtToWstring(key);
-//	std::wstring destinationFullPath = ctx_.GetDestinationDirectory() + relativePath;
-//	bool restoreResult;
-//
-//	if (IsDirectory(data))
-//	{
-//		if (boost::filesystem::exists(destinationFullPath))
-//			restoreResult = true;
-//		else
-//			restoreResult = keeper::FileIO::CreateDir(destinationFullPath);
-//	}
-//	else
-//	{
-//		restoreResult = keeper::FileIO::CopySingleFile(ctx_.GetSourceDirectory() + MIRROR_SUB_DIR + relativePath, destinationFullPath);
-//	}
-//	if (restoreResult)
-//		SetFileAttributes(destinationFullPath.c_str(), static_cast<DbFileEvent*>(data.get_data())->FileAttributes.dwFileAttributes);
-//}
+void RestoreFileTimestamps(const std::wstring& path, const WIN32_FILE_ATTRIBUTE_DATA& attribData)
+{
+	HANDLE hFile = CreateFile(path.c_str(), FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile != NULL)
+	{
+		SetFileTime(hFile, &attribData.ftCreationTime, &attribData.ftLastAccessTime, &attribData.ftLastWriteTime);
+		CloseHandle(hFile);
+	}
+	else
+		LOG_ERROR() << "Can't change file's timestamps: " << path << std::endl;
+}
 
-void TaskRestore::RestoreFromMirrorFolder(const Dbt & key, const DbFileEvent& data)
+void TaskRestore::RestoreFromMirrorFolder(const Dbt& key, const DbFileEvent& data)
 {
 	std::wstring relativePath = keeper::DbtToWstring(key);
 	std::wstring destinationFullPath = ctx_.GetDestinationDirectory() + relativePath;
-	bool restoreResult;
-
-	if (data.FileAttributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	bool isRestoreSucceed;
+	bool isDirectory = (data.FileAttributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+	if (isDirectory)
 	{
 		if (boost::filesystem::exists(destinationFullPath))
-			restoreResult = true;
+			isRestoreSucceed = true;
 		else
-			restoreResult = keeper::FileIO::CreateDir(destinationFullPath);
+			isRestoreSucceed = keeper::FileIO::CreateDir(destinationFullPath);
 	}
 	else
 	{
-		restoreResult = keeper::FileIO::CopySingleFile(ctx_.GetSourceDirectory() + MIRROR_SUB_DIR + relativePath, destinationFullPath);
+		auto transformedPath_ = transformer->GetTransformedName(relativePath, isDirectory);
+		//isRestoreSucceed = keeper::FileIO::CopySingleFile(ctx_.GetSourceDirectory() + MIRROR_SUB_DIR + transformedPath_, destinationFullPath);
+		isRestoreSucceed = transformer->RestoreFile(ctx_.GetSourceDirectory() + MIRROR_SUB_DIR + transformedPath_, destinationFullPath);
 	}
-	if (restoreResult)
+	if (isRestoreSucceed)
+	{
 		SetFileAttributes(destinationFullPath.c_str(), data.FileAttributes.dwFileAttributes);
+		RestoreFileTimestamps(destinationFullPath, data.FileAttributes);
+	}
 }
-
-//void TaskRestore::RestoreFromEventFolder(const Dbt & key, const Dbt & data)
-//{
-//	DbFileEvent* pEvent = static_cast<DbFileEvent*>(data.get_data());
-//	boost::posix_time::ptime storeOldTimestamp = keeper::ConvertMillisecToPtime(pEvent->EventTimeStamp);
-//
-//	std::wstring relativePath = keeper::DbtToWstring(key);
-//	std::wstring storeOldFullPath = ctx_.GetSourceDirectory() + keeper::PTimeToWstringSafeSymbols(storeOldTimestamp) + L'\\' + relativePath;
-//	std::wstring destinationFullPath = ctx_.GetDestinationDirectory() + relativePath;
-//	bool restoreResult;
-//
-//	if (IsDirectory(data))
-//	{
-//		if (boost::filesystem::exists(destinationFullPath))
-//			restoreResult = true;
-//		else
-//			restoreResult = keeper::FileIO::CreateDir(destinationFullPath);
-//	}
-//	else
-//	{
-//		restoreResult = keeper::FileIO::CopySingleFile(storeOldFullPath, destinationFullPath);
-//	}
-//	if (restoreResult)
-//		SetFileAttributes(destinationFullPath.c_str(), static_cast<DbFileEvent*>(data.get_data())->FileAttributes.dwFileAttributes);
-//}
 
 void TaskRestore::RestoreFromEventFolder(const Dbt & key, const DbFileEvent& data)
 {
 	boost::posix_time::ptime storeOldTimestamp = keeper::ConvertMillisecToPtime(data.EventTimeStamp);
+	bool isDirectory = (data.FileAttributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 
 	std::wstring relativePath = keeper::DbtToWstring(key);
-	std::wstring storeOldFullPath = ctx_.GetSourceDirectory() + keeper::PTimeToWstringSafeSymbols(storeOldTimestamp) + L'\\' + relativePath;
+	auto transformedPath_ = transformer->GetTransformedName(relativePath, isDirectory);
+	std::wstring storeOldFullPath = ctx_.GetSourceDirectory() + keeper::PTimeToWstringSafeSymbols(storeOldTimestamp) + L'\\' + transformedPath_;
 	std::wstring destinationFullPath = ctx_.GetDestinationDirectory() + relativePath;
 	bool restoreResult;
 
@@ -110,10 +83,14 @@ void TaskRestore::RestoreFromEventFolder(const Dbt & key, const DbFileEvent& dat
 	}
 	else
 	{
-		restoreResult = keeper::FileIO::CopySingleFile(storeOldFullPath, destinationFullPath);
+		//restoreResult = keeper::FileIO::CopySingleFile(storeOldFullPath, destinationFullPath);
+		restoreResult = transformer->RestoreFile(storeOldFullPath, destinationFullPath);
 	}
 	if (restoreResult)
+	{
 		SetFileAttributes(destinationFullPath.c_str(), data.FileAttributes.dwFileAttributes);
+		RestoreFileTimestamps(destinationFullPath, data.FileAttributes);
+	}
 }
 
 inline FileEventType GetEventType(const Dbt& dbt)
@@ -128,12 +105,13 @@ bool TaskRestore::Run()
 		LOG_FATAL() << "Can't open database" << std::endl;
 		return false;
 	}
+	transformer = std::make_unique<keeper::FilesTransformer>(ctx_);
 
 	const ptime& timestamp = ctx_.GetRestoreTimeStamp();
 	int64_t userTimestamp64 = (timestamp != not_a_date_time) ? keeper::ConvertPtimeToMillisec(timestamp) : 0;
 
 	Dbc* mainCursor = nullptr;
-	ctx_.GetMainDB().cursor(NULL, &mainCursor, 0);
+	ctx_.GetMainDB().cursor(nullptr, &mainCursor, 0);
 	BOOST_SCOPE_EXIT_ALL(&)
 	{
 		if (mainCursor != nullptr)
@@ -147,8 +125,8 @@ bool TaskRestore::Run()
 
 	Dbt dataNext;
 	int64_t eventTimestamp;
-
 	int result;
+	
 	while (true)
 	{
 		result = mainCursor->get(&keyMain, &dataMain, DB_NEXT_NODUP);
@@ -173,10 +151,8 @@ bool TaskRestore::Run()
 					result = mainCursor->get(&keyMain, &dataNext, DB_NEXT_DUP);
 					//is it the last event?
 					if (result == DB_NOTFOUND)
-						//RestoreFromMirrorFolder(keyMain, dataMain);
 						RestoreFromMirrorFolder(keyMain, fileEvent);
 					else
-						//RestoreFromEventFolder(keyMain, dataMain);
 						RestoreFromEventFolder(keyMain, fileEvent);
 					
 					isFileRestored = true;
@@ -197,10 +173,8 @@ bool TaskRestore::Run()
 							//read next event
 							result = mainCursor->get(&keyMain, &dataNext, DB_NEXT_DUP);
 							if (result == DB_NOTFOUND)
-								//RestoreFromMirrorFolder(keyMain, dataMain);
 								RestoreFromMirrorFolder(keyMain, fileEvent);
 							else
-								//RestoreFromEventFolder(keyMain, dataMain);
 								RestoreFromEventFolder(keyMain, fileEvent);
 
 							break;
@@ -211,11 +185,9 @@ bool TaskRestore::Run()
 					else
 					{
 						//previous event as the actual
-						//if (GetEventType(dataMainPrev) == FileEventType::Deleted) //no such file at this time
 						if (static_cast<FileEventType>(fileEventPrev.FileEvent) == FileEventType::Deleted) //no such file at this time
 							break;
 						
-						//RestoreFromEventFolder(keyMain, dataMain);
 						RestoreFromEventFolder(keyMain, fileEvent);
 					}
 
@@ -227,7 +199,6 @@ bool TaskRestore::Run()
 				//seek till the end
 			}
 			//proceed to the next event
-			//dataMainPrev = dataMain;
 			fileEventPrev = fileEvent;
 			isFirstEvent = false;
 

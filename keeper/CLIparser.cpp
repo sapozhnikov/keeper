@@ -1,7 +1,9 @@
 #include "stdafx.h"
-#include <string>
 #include <iostream>
+#pragma warning(push)
+#pragma warning(disable:4459)
 #include <boost\program_options.hpp>
+#pragma warning(pop)
 #include "TaskContext.h"
 
 //WARNING: timestamps as std::string, cause BOOST libs, period as std::string cause RegEx libs
@@ -11,14 +13,13 @@ using namespace ConsoleLogger;
 
 class WrongArguments final {};
 
-//TRUE if its OK to proceed the task
+//returns 'true' if its OK to proceed the task
 bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 {
 	options_description commonDesc("Allowed options");
 	commonDesc.add_options()
 		("backup", "backup files")
 		("restore", "restore files from backup")
-		("list", "display list of backup versions")
 		("dumpdb", "dump backups database")
 		("purge", "erase old incremental changes");
 	
@@ -26,24 +27,21 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 	otherOptionsDesc.add_options()
 		("verbose", "verbose mode")
 		("printloglevel", "prepend log level to messages")
-		("printtimestamp", "prepend timestamt po messages");
-
-	//options_description backRestCommDesc("Backup and Restore common options");
+		("printtimestamp", "prepend timestamp to messages")
+		("password", value<std::string>(), "password for accessing files")
+		("encodenames", "encode file names");
 
 	options_description backupDesc("Backup options");
 	backupDesc.add_options()
 		("srcdir", wvalue<std::wstring>(), "full path to directory to backup")
-		("dstdir", wvalue<std::wstring>(), "full path to directory there data will be stored");
+		("dstdir", wvalue<std::wstring>(), "full path to directory there data will be stored")
+		("compress", value<unsigned int>()->implicit_value(5), "compress files (1-faster, ..., 9-slower)");
 
 	options_description restoreDesc("Restore options");
 	restoreDesc.add_options()
 		("srcdir", wvalue<std::wstring>(), "full path to directory there is data stored")
 		("dstdir", wvalue<std::wstring>(), "full path to directory there data will be written")
 		("timestamp", value<std::string>(), "timestamp of the backup, or the latest, if not defined (format \"YYYY-MM-DD HH:mm:SS.SSS\")");
-
-	options_description listDesc("List options");
-	listDesc.add_options()
-		("srcdir", wvalue<std::wstring>(), "full path to directory there is data stored");
 
 	options_description dumpDesc("Dump DB options");
 	dumpDesc.add_options()
@@ -73,14 +71,6 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 				throw WrongArguments();
 			else
 				task = keeper::Task::Restore;
-		}
-
-		if (varMap.count("list"))
-		{
-			if (task != keeper::Task::Undetected)
-				throw WrongArguments();
-			else
-				task = keeper::Task::List;
 		}
 
 		if (varMap.count("dumpdb"))
@@ -122,11 +112,27 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 			ConsoleLogger::SetAttrTimestampVisible(true);
 		}
 
+		if (varMapOther.count("encodenames"))
+		{
+			ctx.isEncodeFileNames_ = true;
+		}
+
+		if (varMapOther.count("password"))
+		{
+			ctx.DbPassword = varMapOther["password"].as<std::string>();
+		}
+
+		if (ctx.isEncodeFileNames_ && ctx.DbPassword.empty())
+		{
+			LOG_FATAL() << "Password missed" << std::endl;
+			throw WrongArguments();
+		}
+
 		//backup
 		if (task == keeper::Task::Backup)
 		{
 			options_description tmpOptions;
-			tmpOptions.add(commonDesc).add(backupDesc);
+			tmpOptions.add(commonDesc).add(otherOptionsDesc).add(backupDesc);
 			variables_map varMapBackup;
 			store(parse_command_line(argc, argv, tmpOptions), varMapBackup);
 			notify(varMapBackup);
@@ -141,6 +147,11 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 			else
 				throw WrongArguments();
 
+			if (varMapBackup.count("compress"))
+				ctx.CompressionLevel = varMapBackup["compress"].as<unsigned int>();
+			else
+				ctx.CompressionLevel = 0;
+
 			ctx.Task = keeper::Task::Backup;
 
 			return true;
@@ -150,7 +161,7 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 		if (task == keeper::Task::Restore)
 		{
 			options_description tmpOptions;
-			tmpOptions.add(commonDesc).add(restoreDesc);
+			tmpOptions.add(commonDesc).add(otherOptionsDesc).add(restoreDesc);
 			variables_map varMapRestore;
 			store(parse_command_line(argc, argv, tmpOptions), varMapRestore);
 			notify(varMapRestore);
@@ -178,30 +189,11 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 			return true;
 		}
 
-		//List
-		if (task == keeper::Task::List)
-		{
-			options_description tmpOptions;
-			tmpOptions.add(commonDesc).add(listDesc);
-			variables_map varMapList;
-			store(parse_command_line(argc, argv, tmpOptions), varMapList);
-			notify(varMapList);
-
-			if (varMapList.count("srcdir"))
-				ctx.SetSourceDirectory(varMapList["srcdir"].as<std::wstring>());
-			else
-				throw WrongArguments();
-
-			ctx.Task = keeper::Task::List;
-
-			return true;
-		}
-
 		//dump
 		if (task == keeper::Task::DumpDB)
 		{
 			options_description tmpOptions;
-			tmpOptions.add(commonDesc).add(dumpDesc);
+			tmpOptions.add(commonDesc).add(otherOptionsDesc).add(dumpDesc);
 			variables_map varMapDumpDB;
 			store(parse_command_line(argc, argv, tmpOptions), varMapDumpDB);
 			notify(varMapDumpDB);
@@ -220,7 +212,7 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 		if (task == keeper::Task::Purge)
 		{
 			options_description tmpOptions;
-			tmpOptions.add(commonDesc).add(purgeDesc);
+			tmpOptions.add(commonDesc).add(otherOptionsDesc).add(purgeDesc);
 			variables_map varMapPurge;
 			store(parse_command_line(argc, argv, tmpOptions), varMapPurge);
 			notify(varMapPurge);
@@ -247,14 +239,13 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 		std::cout << commonDesc << std::endl;
 		std::cout << backupDesc << std::endl;
 		std::cout << restoreDesc << std::endl;
-		std::cout << listDesc << std::endl;
 		std::cout << dumpDesc << std::endl;
 		std::cout << purgeDesc << std::endl;
 		std::cout << otherOptionsDesc << std::endl;
 
 		return false;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		LOG_FATAL() << "Error while parsing arguments" << std::endl;
 	}

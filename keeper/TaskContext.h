@@ -8,7 +8,6 @@ namespace keeper
 		Undetected, //used in CLI parser
 		Backup,
 		Restore,
-		List,
 		Purge,
 		DumpDB
 	};
@@ -17,6 +16,7 @@ namespace keeper
 	{
 	public:
 		TaskContext();
+		~TaskContext();
 
 		keeper::Task Task;
 		//avoiding BOOST's bug with extended length filenames
@@ -28,21 +28,37 @@ namespace keeper
 		const boost::posix_time::ptime& GetRestoreTimeStamp() const;
 		const boost::posix_time::ptime& GetPurgeTimeStamp() const;
 		bool SetPurgeTimestampFromArg(std::string timestamp);
-		bool OpenDatabase();
+		bool OpenDatabase(bool LoadConfig = true);
 		bool CreateDatabase();
 		bool CompressDatabase();
 		void CloseDatabase();
 		Db& GetMainDB();
+		//Db& GetConfigDB();
+
+		DWORD CompressionLevel = 0;
+		std::string DbPassword;
+		byte FileEncodeKey_[crypto_stream_chacha20_KEYBYTES];
+		//byte FileEncodeNonce_[crypto_stream_chacha20_NONCEBYTES];
+		bool isEncodeFileNames_ = false;
+		byte NamesEncodeKey_[crypto_stream_chacha20_KEYBYTES];
+		byte NamesEncodeNonce_[crypto_stream_chacha20_NONCEBYTES];
 
 	private:
 		bool SetPurgeTimeStampFromDate(std::string timestamp);
 		bool SetPurgeTimeStampFromDuration(std::string timestamp);
 
+		bool SetConfigValueDWord(const std::string& name, DWORD val);
+		bool GetConfigValueDWord(const std::string & name, DWORD& val);
+		bool SetConfigValueBinaryArr(const std::string& name, byte* val, unsigned int len);
+		bool GetConfigValueBinaryArr(const std::string& name, byte* val, unsigned int len);
+		void DisplayTaskConfig() const;
+
 		std::wstring sourceDirectory_;
 		std::wstring destinationDirectory_;
-		Db db_/*, dbDelta_*/;
+		Db eventsDb_, configDb_, secretsDb_;
 		boost::posix_time::ptime restoreTimeStamp_ = boost::posix_time::not_a_date_time;
 		boost::posix_time::ptime purgeTimeStamp_ = boost::posix_time::not_a_date_time;
 		std::wstring GenerateDbPath();
+		std::string DbKey; //key derived from password
 	};
 }

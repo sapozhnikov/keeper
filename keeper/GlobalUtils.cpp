@@ -4,22 +4,12 @@
 #include "GlobalUtils.h"
 #include "ConsoleLogger.h"
 
-//#include <Windows.h> //include it AFTER berkley stuff
-
 using namespace boost::posix_time;
 using namespace ConsoleLogger;
 
 namespace keeper
 {
 	static const ptime myEpoch(boost::gregorian::date(1970, boost::gregorian::Jan, 1));
-
-	//int64_t ConvertPtimeToMicrosec(boost::posix_time::ptime time)
-	//{
-	//	time_duration myTimeFromEpoch = time - myEpoch;
-	//	int64_t myTimeAsInt = myTimeFromEpoch.total_microseconds();
-
-	//	return myTimeAsInt;
-	//}
 
 	int64_t ConvertPtimeToMillisec(boost::posix_time::ptime time)
 	{
@@ -28,13 +18,6 @@ namespace keeper
 
 		return myTimeAsInt;
 	}
-
-	//boost::posix_time::ptime ConvertMicrosecToPtime(int64_t microsec)
-	//{
-	//	ptime result = myEpoch + boost::posix_time::microseconds(microsec);
-
-	//	return result;
-	//}
 
 	boost::posix_time::ptime ConvertMillisecToPtime(int64_t millisec)
 	{
@@ -156,9 +139,9 @@ namespace keeper
 		return std::wstring(static_cast<wchar_t*>(dbt.get_data()), dbt.get_size() / sizeof(wchar_t));
 	}
 
-	Dbt WstringToDbt(const std::wstring & str) //is it safe to return???
+	Dbt WstringToDbt(const std::wstring & str) //is it safe to pass???
 	{
-		Dbt dbt((void*)str.c_str(), sizeof(wchar_t)*str.length()); //dirty hack
+		Dbt dbt((void*)str.c_str(), int(sizeof(wchar_t)*str.length())); //dirty hack
 		return dbt;
 	}
 
@@ -168,5 +151,27 @@ namespace keeper
 			return;
 		LOG_FATAL() << "DB error: " << result << std::endl;
 		throw std::exception();
+	}
+
+	std::string keeper::PasswordToKey(const std::string & password)
+	{
+		byte key[crypto_box_SEEDBYTES]; //32
+		byte salt[crypto_pwhash_SALTBYTES] = { 0xBE,0x28,0x74,0x25,0x7E,0xDA,0x9F,0x3C,0x1C,0x19,0xBE,0x38,0x0A,0x3A,0x2C,0x7B }; //16
+		
+		if (crypto_pwhash(key, crypto_box_SEEDBYTES, password.c_str(), password.length(), salt,
+			crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE,
+			crypto_pwhash_ALG_DEFAULT) != 0)
+		{
+			LOG_FATAL() << "Can't derive key from password" << std::endl;
+			throw;
+		}
+		std::ostringstream s;
+		//s.fill('0');
+		s << std::setfill('0') << std::hex;
+		//s.width(2);
+		for (int i = 0; i < crypto_box_SEEDBYTES; i++)
+			s << std::setw(2) << int(key[i]);
+
+		return s.str();
 	}
 }

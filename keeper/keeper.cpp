@@ -19,6 +19,8 @@ int wmain(int argc, wchar_t *argv[])
 	if (!ParseCLITask(taskCtx, argc, argv))
 		exit(0);
 
+	sodium_init();
+
 #ifdef _DEBUG
 	SetLogLevel(ConsoleLogger::LogLevel::trace);
 	SetAttrLogLevelVisible(true);
@@ -47,13 +49,6 @@ int wmain(int argc, wchar_t *argv[])
 		{
 			TaskRestore taskRestore(taskCtx);
 			taskRestore.Run();
-		}
-		break;
-
-		case keeper::Task::List:
-		{
-			TaskList taskList(taskCtx);
-			taskList.Run();
 		}
 		break;
 

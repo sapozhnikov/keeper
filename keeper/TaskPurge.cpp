@@ -6,6 +6,7 @@
 #include <vector>
 //#include <boost\filesystem.hpp>
 #include "FileIO.h"
+#include "FilesTransformer.h"
 
 using namespace keeper;
 using namespace ConsoleLogger;
@@ -40,7 +41,7 @@ bool TaskPurge::Run()
 
 	Dbc* mainCursor;
 	Dbt keyMain, dataMain;
-	ctx_.GetMainDB().cursor(NULL, &mainCursor, 0);
+	ctx_.GetMainDB().cursor(nullptr, &mainCursor, 0);
 	BOOST_SCOPE_EXIT_ALL(&)
 	{
 		if (mainCursor != nullptr)
@@ -115,10 +116,13 @@ bool TaskPurge::Run()
 	}
 	
 	LOG_VERBOSE() << "Deleting orphaned files (without DB record)" << std::endl;
+
+	keeper::FilesTransformer transformer(ctx_);
 	std::wstring mirrorDir = ctx_.GetSourceDirectory() + MIRROR_SUB_DIR;
 	auto skipPathCharsCount = mirrorDir.length();
 	boost::filesystem::recursive_directory_iterator dirIterator(mirrorDir);
 	std::vector<std::wstring> filesToDelete;
+	std::wstring restoredRelativePath;
 
 	while (true)
 	{
@@ -126,9 +130,10 @@ bool TaskPurge::Run()
 			break;
 		const std::wstring& sourceFullPath = dirIterator->path().wstring();
 		relativePath = sourceFullPath.substr(skipPathCharsCount, skipPathCharsCount - sourceFullPath.length());
+		restoredRelativePath = transformer.GetOriginalName(relativePath, is_directory(dirIterator->path()));
 
 		//get the last event
-		Dbt key = keeper::WstringToDbt(relativePath);
+		Dbt key = keeper::WstringToDbt(restoredRelativePath);
 		Dbt data;
 
 		result = mainCursor->get(&key, &data, DB_SET);
@@ -150,7 +155,7 @@ bool TaskPurge::Run()
 			{
 				filesToDelete.push_back(dirIterator->path().wstring());
 			}
-		dirIterator++;
+		++dirIterator;
 	}
 
 	for (const auto& filename : filesToDelete)

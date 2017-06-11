@@ -1,20 +1,25 @@
 #pragma once
 
-static wchar_t* MIRROR_SUB_DIR = L"mirror\\";
-static wchar_t* MAIN_DB_FILE = L"events.db";
-//static wchar_t* DELTA_DB_FILE = L"deletes.db";
+const wchar_t * const MIRROR_SUB_DIR = L"mirror\\";
+const wchar_t * const MAIN_DB_FILE = L"buro.database";
+const char * const EVENTS_DB_TABLE = "events";
+const char * const CONFIG_DB_TABLE = "config";
+const char * const SECRETS_DB_TABLE = "secrets";
+const wchar_t * const NAME_SUFFIX_COMPRESSED = L".bz2";
+const wchar_t * const NAME_SUFFIX_ENCRYPTED = L".encrypted";
+//you can add here anything you want
+const wchar_t* const ENCODED_NAME_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!~.$()";
 
-const byte configKey[] = { 0xC0,0x5B,0x18,0xE2,0xEE,0x31,0xF6,0xF8,0x13,0xD6,0xFE,0x8C,0xEC,0xF7,0x4D,0x9C };
-const DWORD ConfigStructVersionRequired = 1;
+//const DWORD ConfigStructVersionRequired = 1;
 
-#pragma pack(push, 1)
-struct DbConfig
-{
-	DWORD ConfigStructVersion;
-	byte IsCompressed;
-	//byte IsEncoded : 1;
-};
-#pragma pack(pop)
+//#pragma pack(push, 1)
+//struct DbConfig
+//{
+//	DWORD ConfigStructVersion;
+//	byte IsCompressed;
+//	//byte IsEncoded : 1;
+//};
+//#pragma pack(pop)
 
 template <typename T> int sgn(T val) {
 	return (T(0) < val) - (val < T(0));
