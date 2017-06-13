@@ -34,7 +34,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -47,7 +47,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -79,13 +79,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\libs\boost_1_63_0;D:\db-6.2.23\build_windows;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\libs\berkeleyDB\win32\release;D:\libs\boost_1_63_0\stage32\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\libs\libsodium\include;D:\libs\boost_1_63_0;D:\db-6.2.23\build_windows;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\libs\libsodium\Win32\Release\v140\static;D:\libs\berkeleyDB\win32\release;D:\libs\boost_1_63_0\stage32\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\libs\boost_1_63_0;D:\db-6.2.23\build_windows;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\libs\berkeleyDB\win64\release;D:\libs\boost_1_63_0\stage64\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\libs\libsodium\include;D:\libs\boost_1_63_0;D:\db-6.2.23\build_windows;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\libs\libsodium\x64\Release\v140\static;D:\libs\berkeleyDB\win64\release;D:\libs\boost_1_63_0\stage64\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -133,7 +133,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>libdb62s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libdb62s.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -152,7 +152,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>libdb62s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libdb62s.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

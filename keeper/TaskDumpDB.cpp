@@ -110,14 +110,16 @@ bool TaskDumpDB::Run()
 				s << L"NOT_CONTENT_INDEXED ";
 			if (fileAttr & FILE_ATTRIBUTE_ENCRYPTED)
 				s << L"ENCRYPTED ";
+#ifndef _USING_V110_SDK71_
 			if (fileAttr & FILE_ATTRIBUTE_INTEGRITY_STREAM)
 				s << L"INTEGRITY_STREAM ";
-			if (fileAttr & FILE_ATTRIBUTE_VIRTUAL)
-				s << L"VIRTUAL ";
 			if (fileAttr & FILE_ATTRIBUTE_NO_SCRUB_DATA)
 				s << L"NO_SCRUB_DATA ";
 			if (fileAttr & FILE_ATTRIBUTE_EA)
-				s << L"EA";
+				s << L"EA ";
+#endif
+			if (fileAttr & FILE_ATTRIBUTE_VIRTUAL)
+				s << L"VIRTUAL";
 			CONSOLE() << s.str() << std::endl;
 			s.str(std::wstring());
 			s.clear();

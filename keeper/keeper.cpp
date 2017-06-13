@@ -4,7 +4,6 @@
 #include "TaskBackup.h"
 #include "TaskDumpDB.h"
 #include "TaskRestore.h"
-#include "TaskList.h"
 #include "TaskPurge.h"
 
 using namespace std;
