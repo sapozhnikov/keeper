@@ -173,7 +173,7 @@ namespace keeper
 	{
 		LOG_VERBOSE() << "Compression Level = " << CompressionLevel << std::endl;
 		LOG_VERBOSE() << "Encrypted = " << (!DbPassword.empty() ? "true" : "false") << std::endl;
-		LOG_VERBOSE() << "File names encrypted = " << (isEncodeFileNames_ ? "true" : "false") << std::endl;
+		LOG_VERBOSE() << "File names encrypted = " << (isEncryptedFileNames ? "true" : "false") << std::endl;
 	}
 
 	bool TaskContext::OpenDatabase(bool LoadConfig)
@@ -233,21 +233,53 @@ namespace keeper
 
 		if (LoadConfig)
 		{
-			if (!GetConfigValueDWord(PARAM_COMPRESSION, CompressionLevel) ||
-				!GetConfigValueBinaryArr(PARAM_FILES_ENCODE_KEY, FileEncodeKey_, crypto_stream_chacha20_KEYBYTES))
-				throw;
-			
-			DWORD tmpVal = 0;
-			GetConfigValueDWord(PARAM_NAMES_ENCODE, tmpVal);
-			isEncodeFileNames_ = (tmpVal != 0);
-
-			if (isEncodeFileNames_)
+			DWORD CompressionLevelSaved;
+			if (!GetConfigValueDWord(PARAM_COMPRESSION, CompressionLevelSaved))
+				throw /*std::runtime_error(string("Can't load parameter: ") + PARAM_COMPRESSION)*/;
+			if (CompressionLevelSaved != CompressionLevel)
 			{
-				if (!GetConfigValueBinaryArr(PARAM_NAMES_ENCODE_KEY, NamesEncodeKey_, crypto_stream_chacha20_KEYBYTES) ||
-					!GetConfigValueBinaryArr(PARAM_NAMES_ENCODE_NONCE, NamesEncodeNonce_, crypto_stream_chacha20_NONCEBYTES))
-					throw;
+				if ((CompressionLevelSaved != 0) && (CompressionLevel == 0))
+				{
+					LOG_WARNING() << "Compression used in this repository" << endl;
+					CompressionLevel = CompressionLevelSaved;
+				}
+
+				if ((CompressionLevelSaved == 0) && (CompressionLevel != 0))
+				{
+					LOG_WARNING() << "Compression not used in this repository" << endl;
+					CompressionLevel = CompressionLevelSaved;
+				}
+
+				if ((CompressionLevelSaved != 0) && (CompressionLevel != 0))
+				{
+					LOG_INFO() << "Compression ratio changed to " << CompressionLevel << endl;
+					SetConfigValueDWord(PARAM_COMPRESSION, CompressionLevel);
+				}
 			}
 
+			if (!DbPassword.empty())
+			{
+				if (!GetConfigValueBinaryArr(PARAM_FILES_ENCODE_KEY, FileEncodeKey_, crypto_stream_chacha20_KEYBYTES))
+					throw;
+			}
+			
+			DWORD isEncodeFileNamesSaved = 0;
+			GetConfigValueDWord(PARAM_NAMES_ENCODE, isEncodeFileNamesSaved);
+			if (isEncodeFileNamesSaved != 0)
+			{
+				if (!isEncryptedFileNames)
+				{
+					LOG_WARNING() << "File names encryption used in this repository" << endl;
+					isEncryptedFileNames = true;
+				}
+
+				if (isEncryptedFileNames)
+				{
+					if (!GetConfigValueBinaryArr(PARAM_NAMES_ENCODE_KEY, NamesEncodeKey_, crypto_stream_chacha20_KEYBYTES) ||
+						!GetConfigValueBinaryArr(PARAM_NAMES_ENCODE_NONCE, NamesEncodeNonce_, crypto_stream_chacha20_NONCEBYTES))
+						throw;
+				}
+			}
 			DisplayTaskConfig();
 		}
 
@@ -333,7 +365,7 @@ namespace keeper
 				SetConfigValueBinaryArr(PARAM_FILES_ENCODE_KEY, FileEncodeKey_, crypto_stream_chacha20_KEYBYTES);
 			}
 
-			if (isEncodeFileNames_)
+			if (isEncryptedFileNames)
 			{
 				randombytes_buf(NamesEncodeKey_, crypto_stream_chacha20_KEYBYTES);
 				randombytes_buf(NamesEncodeNonce_, crypto_stream_chacha20_NONCEBYTES);

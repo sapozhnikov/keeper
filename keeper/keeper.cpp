@@ -65,10 +65,22 @@ int wmain(int argc, wchar_t *argv[])
 	catch (DbException& e)
 	{
 		LOG_FATAL() << "DB error: " << e.what() << endl;
+		return -1;
+	}
+	catch (runtime_error& e)
+	{
+		LOG_FATAL() << e.what() << endl;
+		return -1;
 	}
 	catch (exception& e)
 	{
-		LOG_FATAL() << e.what();
+		LOG_FATAL() << e.what() << endl;
+		return -1;
+	}
+	catch (...)
+	{
+		LOG_FATAL() << "Error occured" << endl;
+		return -1;
 	}
 
 	if (GetMaxLogLevelPrinted() > LogLevel::warning)

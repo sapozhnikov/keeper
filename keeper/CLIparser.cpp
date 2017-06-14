@@ -114,7 +114,7 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 
 		if (varMapOther.count("encodenames"))
 		{
-			ctx.isEncodeFileNames_ = true;
+			ctx.isEncryptedFileNames = true;
 		}
 
 		if (varMapOther.count("password"))
@@ -122,7 +122,7 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 			ctx.DbPassword = varMapOther["password"].as<std::string>();
 		}
 
-		if (ctx.isEncodeFileNames_ && ctx.DbPassword.empty())
+		if (ctx.isEncryptedFileNames && ctx.DbPassword.empty())
 		{
 			LOG_FATAL() << "Password missed" << std::endl;
 			throw WrongArguments();

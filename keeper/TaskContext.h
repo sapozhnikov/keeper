@@ -39,7 +39,7 @@ namespace keeper
 		std::string DbPassword;
 		byte FileEncodeKey_[crypto_stream_chacha20_KEYBYTES];
 		//byte FileEncodeNonce_[crypto_stream_chacha20_NONCEBYTES];
-		bool isEncodeFileNames_ = false;
+		bool isEncryptedFileNames = false;
 		byte NamesEncodeKey_[crypto_stream_chacha20_KEYBYTES];
 		byte NamesEncodeNonce_[crypto_stream_chacha20_NONCEBYTES];
 

@@ -1,7 +1,7 @@
 #pragma once
 
 const wchar_t * const MIRROR_SUB_DIR = L"mirror\\";
-const wchar_t * const MAIN_DB_FILE = L"buro.database";
+const wchar_t * const MAIN_DB_FILE = L"buro.db";
 const char * const EVENTS_DB_TABLE = "events";
 const char * const CONFIG_DB_TABLE = "config";
 const char * const SECRETS_DB_TABLE = "secrets";

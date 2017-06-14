@@ -18,7 +18,7 @@ namespace keeper
 	{
 		isFileCompressed = (ctx.CompressionLevel != 0);
 		isFileEncrypted = !ctx.DbPassword.empty();
-		isFileNamesEncrypted = ctx.isEncodeFileNames_;
+		isFileNamesEncrypted = ctx.isEncryptedFileNames;
 		memcpy(FileEncryptKey, ctx.FileEncodeKey_, crypto_stream_chacha20_KEYBYTES);
 	}
 	
