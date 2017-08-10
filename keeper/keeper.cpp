@@ -15,6 +15,8 @@ int wmain(int argc, wchar_t *argv[])
 {
 	SetLogLevel(ConsoleLogger::LogLevel::info);
 
+	LOG_INFO() << MESSAGE_ABOUT << endl;
+
 	if (!ParseCLITask(taskCtx, argc, argv))
 		exit(0);
 
