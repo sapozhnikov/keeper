@@ -61,6 +61,8 @@ void TaskBackup::Run()
 	};
 
 	keeper::FilesTransformer transformer(ctx_);
+	keeper::WildCardNameChecker& namesChecker = ctx_.NamesChecker;
+	bool NamesFilteringEnabled = namesChecker.IsFilteringEnabled;
 
 	//start copy process
 	while (true)
@@ -69,7 +71,15 @@ void TaskBackup::Run()
 			break;
 		const wstring& sourceFullPath = dirIterator_->path().wstring();
 		relativePath_ = sourceFullPath.substr(skipPathCharsCount_, skipPathCharsCount_ - sourceFullPath.length());
-		
+		if (NamesFilteringEnabled)
+		{
+			if (!namesChecker.IsMatched(relativePath_))
+			{
+				++dirIterator_;
+				continue;
+			}
+		}
+
 		bool isDirectory = is_directory(dirIterator_->path());
 		transformedPath_ = transformer.GetTransformedName(relativePath_, isDirectory);
 

@@ -1,7 +1,6 @@
 #pragma once
 #include <boost\filesystem.hpp>
 #include "TaskContext.h"
-//#include <db_cxx.h>
 
 class TaskBackup final
 {

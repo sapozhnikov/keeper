@@ -29,7 +29,9 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 		("printloglevel", "prepend log level to messages")
 		("printtimestamp", "prepend timestamp to messages")
 		("password", value<std::string>(), "password for accessing files")
-		("encodenames", "encode file names");
+		("encodenames", "encode file names")
+		("include", wvalue<std::wstring>(), "mask to include files (only matched files will be included, if specified)")
+		("exclude", wvalue<std::wstring>(), "mask to exclude files");
 
 	options_description backupDesc("Backup options");
 	backupDesc.add_options()
@@ -120,6 +122,16 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 		if (varMapOther.count("password"))
 		{
 			ctx.DbPassword = varMapOther["password"].as<std::string>();
+		}
+
+		if (varMapOther.count("include"))
+		{
+			ctx.NamesChecker.AddIncludeMask(varMapOther["include"].as<std::wstring>());
+		}
+
+		if (varMapOther.count("exclude"))
+		{
+			ctx.NamesChecker.AddExcludeMask(varMapOther["exclude"].as<std::wstring>());
 		}
 
 		if (ctx.isEncryptedFileNames && ctx.DbPassword.empty())

@@ -40,6 +40,13 @@ void RestoreFileTimestamps(const std::wstring& path, const WIN32_FILE_ATTRIBUTE_
 void TaskRestore::RestoreFromMirrorFolder(const Dbt& key, const DbFileEvent& data)
 {
 	std::wstring relativePath = keeper::DbtToWstring(key);
+	
+	if (ctx_.NamesChecker.IsFilteringEnabled)
+	{
+		if (!ctx_.NamesChecker.IsMatched(relativePath))
+			return;
+	}
+
 	std::wstring destinationFullPath = ctx_.GetDestinationDirectory() + relativePath;
 	bool isRestoreSucceed;
 	bool isDirectory = (data.FileAttributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
@@ -53,7 +60,6 @@ void TaskRestore::RestoreFromMirrorFolder(const Dbt& key, const DbFileEvent& dat
 	else
 	{
 		auto transformedPath_ = transformer->GetTransformedName(relativePath, isDirectory);
-		//isRestoreSucceed = keeper::FileIO::CopySingleFile(ctx_.GetSourceDirectory() + MIRROR_SUB_DIR + transformedPath_, destinationFullPath);
 		isRestoreSucceed = transformer->RestoreFile(ctx_.GetSourceDirectory() + MIRROR_SUB_DIR + transformedPath_, destinationFullPath);
 	}
 	if (isRestoreSucceed)
@@ -69,6 +75,13 @@ void TaskRestore::RestoreFromEventFolder(const Dbt & key, const DbFileEvent& dat
 	bool isDirectory = (data.FileAttributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 
 	std::wstring relativePath = keeper::DbtToWstring(key);
+
+	if (ctx_.NamesChecker.IsFilteringEnabled)
+	{
+		if (!ctx_.NamesChecker.IsMatched(relativePath))
+			return;
+	}
+
 	auto transformedPath_ = transformer->GetTransformedName(relativePath, isDirectory);
 	std::wstring storeOldFullPath = ctx_.GetSourceDirectory() + keeper::PTimeToWstringSafeSymbols(storeOldTimestamp) + L'\\' + transformedPath_;
 	std::wstring destinationFullPath = ctx_.GetDestinationDirectory() + relativePath;
@@ -83,7 +96,6 @@ void TaskRestore::RestoreFromEventFolder(const Dbt & key, const DbFileEvent& dat
 	}
 	else
 	{
-		//restoreResult = keeper::FileIO::CopySingleFile(storeOldFullPath, destinationFullPath);
 		restoreResult = transformer->RestoreFile(storeOldFullPath, destinationFullPath);
 	}
 	if (restoreResult)

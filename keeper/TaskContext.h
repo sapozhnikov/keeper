@@ -1,5 +1,6 @@
 #pragma once
 #include <boost\date_time\posix_time\posix_time.hpp>
+#include "WildCardNameChecker.h"
 
 namespace keeper
 {
@@ -33,15 +34,16 @@ namespace keeper
 		bool CompressDatabase();
 		void CloseDatabase();
 		Db& GetMainDB();
-		//Db& GetConfigDB();
 
 		DWORD CompressionLevel = 0;
 		std::string DbPassword;
 		byte FileEncodeKey_[crypto_stream_chacha20_KEYBYTES];
-		//byte FileEncodeNonce_[crypto_stream_chacha20_NONCEBYTES];
 		bool isEncryptedFileNames = false;
 		byte NamesEncodeKey_[crypto_stream_chacha20_KEYBYTES];
 		byte NamesEncodeNonce_[crypto_stream_chacha20_NONCEBYTES];
+
+		//file names wildcards support
+		WildCardNameChecker NamesChecker;
 
 	private:
 		bool SetPurgeTimeStampFromDate(std::string timestamp);

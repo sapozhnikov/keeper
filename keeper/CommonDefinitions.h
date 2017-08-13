@@ -1,6 +1,9 @@
 #pragma once
-
-const char * const MESSAGE_ABOUT = "BURO - backup utility v.0.2b (c) 2017 Dmitriy Sapozhnikov";
+#ifdef _WIN64
+const char * const MESSAGE_ABOUT = "BURO - backup utility version v0.2.1/W64 (c) 2017 Dmitriy Sapozhnikov";
+#else
+const char * const MESSAGE_ABOUT = "BURO - backup utility version v0.2.1/W32 (c) 2017 Dmitriy Sapozhnikov";
+#endif
 const wchar_t * const MIRROR_SUB_DIR = L"mirror\\";
 const wchar_t * const MAIN_DB_FILE = L"buro.db";
 const char * const EVENTS_DB_TABLE = "events";
@@ -10,6 +13,7 @@ const wchar_t * const NAME_SUFFIX_COMPRESSED = L".bz2";
 const wchar_t * const NAME_SUFFIX_ENCRYPTED = L".encrypted";
 //you can add here anything you want
 const wchar_t* const ENCODED_NAME_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!~.$()";
+const wchar_t MASKS_SEPARATOR = L';';
 
 template <typename T> int sgn(T val) {
 	return (T(0) < val) - (val < T(0));

@@ -78,6 +78,9 @@
     <ClInclude Include="ChaChaFilter.h">
       <Filter>Header Files\FilesTransform</Filter>
     </ClInclude>
+    <ClInclude Include="WildCardNameChecker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -121,6 +124,9 @@
     </ClCompile>
     <ClCompile Include="FilesTransformer.cpp">
       <Filter>Source Files\FilesTransform</Filter>
+    </ClCompile>
+    <ClCompile Include="WildCardNameChecker.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
