@@ -25,11 +25,6 @@ TaskBackup::~TaskBackup()
 {
 }
 
-bool PathsComparer(const wstring& path1, const wstring& path2)
-{
-	return path1 > path2;
-}
-
 void TaskBackup::Run()
 {
 	boost::system::error_code errorCode;
@@ -101,8 +96,7 @@ void TaskBackup::Run()
 				//do not move existing folder to storage
 
 				//check if exists
-				//FIXME:!!!!!!!!!!!!!!!!!!!!!!
-				if (!boost::filesystem::exists(mirrorPath_ + relativePath_, errorCode)) //or DB check?
+				if (!boost::filesystem::exists(mirrorPath_ + transformedPath_, errorCode)) //or DB check?
 				{
 					//copy to mirror
 					if (keeper::FileIO::CopyDir(sourceFullPath, mirrorPath_ + transformedPath_))
