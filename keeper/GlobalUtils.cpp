@@ -142,6 +142,7 @@ namespace keeper
 	Dbt WstringToDbt(const std::wstring & str) //is it safe to pass???
 	{
 		Dbt dbt((void*)str.c_str(), int(sizeof(wchar_t)*str.length())); //dirty hack
+		dbt.set_flags(DB_DBT_READONLY);
 		return dbt;
 	}
 

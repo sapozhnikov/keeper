@@ -57,7 +57,7 @@ namespace keeper
 
 		std::wstring sourceDirectory_;
 		std::wstring destinationDirectory_;
-		Db eventsDb_, configDb_, secretsDb_;
+		Db eventsDb_, configDb_;
 		boost::posix_time::ptime restoreTimeStamp_ = boost::posix_time::not_a_date_time;
 		boost::posix_time::ptime purgeTimeStamp_ = boost::posix_time::not_a_date_time;
 		std::wstring GenerateDbPath();

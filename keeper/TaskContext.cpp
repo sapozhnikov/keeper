@@ -31,8 +31,7 @@ namespace keeper
 
 	keeper::TaskContext::TaskContext() :
 		eventsDb_(nullptr, 0),
-		configDb_(nullptr, 0),
-		secretsDb_(nullptr, 0)
+		configDb_(nullptr, 0)
 	{
 	}
 	
@@ -140,18 +139,6 @@ namespace keeper
 		return restoreTimeStamp_;
 	}
 
-#pragma warning(suppress: 4100)
-	int DbEventsCompare(DB *db_, const DBT *data1, const DBT *data2, size_t *locp)
-	{
-		if ((data1->size != sizeof(DbFileEvent)) || (data2->size != sizeof(DbFileEvent)))
-			throw std::exception("Corrupted database");
-
-		if (static_cast<DbFileEvent*>(data1->data)->EventTimeStamp >= static_cast<DbFileEvent*>(data2->data)->EventTimeStamp)
-			return 1;
-		else
-			return -1;
-	}
-
 	//generate DB path from args according task type
 	std::wstring TaskContext::GenerateDbPath()
 	{
@@ -176,6 +163,95 @@ namespace keeper
 		LOG_VERBOSE() << "File names encrypted = " << (isEncryptedFileNames ? "true" : "false") << std::endl;
 	}
 
+	//function to compare one file events. it makes them sorted by date. there is can't be two events with same timestamp.
+#pragma warning(suppress: 4100)
+	int DbEventsCompare(DB *db_, const DBT *data1, const DBT *data2, size_t *locp)
+	{
+		if ((data1->size != sizeof(DbFileEvent)) || (data2->size != sizeof(DbFileEvent)))
+			throw std::exception("DbEventsCompare: Corrupted database");
+
+		if (static_cast<DbFileEvent*>(data1->data)->EventTimeStamp >= static_cast<DbFileEvent*>(data2->data)->EventTimeStamp)
+			return 1;
+		else
+			return -1;
+	}
+
+	//function to compare file names in the b-tree
+	int DbPathsCompare(Db *dbp, const Dbt *data1, const Dbt *data2, size_t *locp)
+	{
+		locp = nullptr;
+		auto dataLen1 = data1->get_size();
+		auto dataLen2 = data2->get_size();
+		
+		//check it containt's even count of bytes
+		if ((dataLen1 & 1) != 0 || (dataLen2 & 1) != 0)
+			throw std::exception("DbPathsCompare: Corrupted database");
+		dataLen1 /= sizeof(wchar_t);
+		dataLen2 /= sizeof(wchar_t);
+		wchar_t* path1 = static_cast<wchar_t*>(data1->get_data());
+		wchar_t* path2 = static_cast<wchar_t*>(data2->get_data());
+
+		auto result = _wcsnicmp(path1, path2, min(dataLen1, dataLen2));
+		if (result == 0)
+		{
+			if (dataLen1 < dataLen2)
+				return -1;
+			if (dataLen1 > dataLen2)
+				return 1;
+		}
+		return result;
+	}
+#if (1)
+	size_t DbPathsPrefix(DB *dbp, const DBT *data1, const DBT *data2)
+	{
+		auto dataLen1 = data1->size;
+		auto dataLen2 = data2->size;
+
+		//check it containt's even count of bytes
+		if ((dataLen1 & 1) != 0 || (dataLen2 & 1) != 0)
+			throw std::exception("DbPathsPrefix: Corrupted database");
+		dataLen1 /= sizeof(wchar_t);
+		dataLen2 /= sizeof(wchar_t);
+
+		wchar_t* path1 = static_cast<wchar_t*>(data1->data);
+		wchar_t* path2 = static_cast<wchar_t*>(data2->data);
+		uint32_t idx;
+		for (idx = 0; idx < min(dataLen1, dataLen2); idx++)
+		{
+			if (*path1 != *path2)
+				return (idx + 1) * sizeof(wchar_t);
+			path1++;
+			path2++;
+		}
+		//return (min(dataLen1, dataLen2)/* + 1*/) * sizeof(wchar_t);
+		if (dataLen1 != dataLen2)
+			return (min(dataLen1, dataLen2) + 1) * sizeof(wchar_t);
+		else
+			return dataLen1 * sizeof(wchar_t);
+	}
+#else
+	//prefix function copied from DB reference
+	size_t DbPathsPrefix(DB *dbp, const DBT *a, const DBT *b)
+	{
+		byte *p1, *p2;
+
+		size_t cnt = 1;
+		size_t len = a->size > b->size ? b->size : a->size;
+		for (p1 = (byte*)a->data, p2 = (byte*)b->data; len--; ++p1, ++p2, ++cnt)
+			if (*p1 != *p2)
+				return (cnt);
+		/*
+		* They match up to the smaller of the two sizes.
+		* Collate the longer after the shorter.
+		*/
+		if (a->size < b->size)
+			return (a->size + 1);
+		if (b->size < a->size)
+			return (b->size + 1);
+		return (b->size);
+	}
+#endif
+
 	bool TaskContext::OpenDatabase(bool LoadConfig)
 	{
 		using namespace std;
@@ -190,6 +266,9 @@ namespace keeper
 
 		eventsDb_.set_flags(DB_DUPSORT);
 		eventsDb_.set_dup_compare(DbEventsCompare);
+		eventsDb_.set_bt_compare(DbPathsCompare);
+		//screw it, its buggy
+		//eventsDb_.set_bt_prefix(DbPathsPrefix);
 
 		try
 		{
@@ -200,28 +279,20 @@ namespace keeper
 
 				eventsDb_.set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
 				configDb_.set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
-				secretsDb_.set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
 			}
 
 			//open existing
 			eventsDb_.open(nullptr,
 				dbNameUTF8.c_str(),
 				EVENTS_DB_TABLE,
-				DB_HASH,
+				DB_BTREE,
 				0,
 				0);
 
 			configDb_.open(nullptr,
 				dbNameUTF8.c_str(),
 				CONFIG_DB_TABLE,
-				DB_HASH,
-				0,
-				0);
-
-			secretsDb_.open(nullptr,
-				dbNameUTF8.c_str(),
-				SECRETS_DB_TABLE,
-				DB_HASH,
+				DB_BTREE,
 				0,
 				0);
 		}
@@ -307,6 +378,8 @@ namespace keeper
 			Db tmpDb(nullptr, 0);
 			tmpDb.set_flags(DB_DUPSORT);
 			tmpDb.set_dup_compare(DbEventsCompare);
+			tmpDb.set_bt_compare(DbPathsCompare);
+			tmpDb.set_bt_prefix(DbPathsPrefix);
 
 			if (!DbPassword.empty() && DbKey.empty())
 				DbKey = PasswordToKey(DbPassword);
@@ -317,32 +390,23 @@ namespace keeper
 			tmpDb.open(nullptr,
 				dbNameUTF8.c_str(),
 				EVENTS_DB_TABLE,
-				DB_HASH,
+				DB_BTREE,
 				DB_CREATE /*| DB_EXCL*/,
 				0);
-			tmpDb.close(0);
 
 			Db tmpDb2(nullptr, 0);
 			if (!DbPassword.empty())
 				tmpDb2.set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
+
 			tmpDb2.open(nullptr,
 				dbNameUTF8.c_str(),
 				CONFIG_DB_TABLE,
-				DB_HASH,
+				DB_BTREE,
 				DB_CREATE /*| DB_EXCL*/,
 				0);
-			tmpDb2.close(0);
 
-			Db tmpDb3(nullptr, 0);
-			if (!DbPassword.empty())
-				tmpDb3.set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
-			tmpDb3.open(nullptr,
-				dbNameUTF8.c_str(),
-				SECRETS_DB_TABLE,
-				DB_HASH,
-				DB_CREATE /*| DB_EXCL*/,
-				0);
-			tmpDb3.close(0);
+			tmpDb.close(0);
+			tmpDb2.close(0);
 		}
 		catch (DbException)
 		{
@@ -389,7 +453,6 @@ namespace keeper
 		DB_COMPACT cData = { 0 };
 		cData.compact_fillpercent = 80;
 		eventsDb_.compact(nullptr, nullptr, nullptr, &cData, DB_FREELIST_ONLY, nullptr);
-		secretsDb_.compact(nullptr, nullptr, nullptr, &cData, DB_FREELIST_ONLY, nullptr);
 		return true;
 	}
 
@@ -397,7 +460,6 @@ namespace keeper
 	{
 		eventsDb_.close(0);
 		configDb_.close(0);
-		secretsDb_.close(0);
 	}
 
 	Db & keeper::TaskContext::GetMainDB()

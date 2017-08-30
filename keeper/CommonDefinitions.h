@@ -1,14 +1,13 @@
 #pragma once
 #ifdef _WIN64
-const char * const MESSAGE_ABOUT = "BURO - backup utility version v0.2.1/W64 (c) 2017 Dmitriy Sapozhnikov";
+const char * const MESSAGE_ABOUT = "BURO - backup utility v0.3/W64 (c) 2017 Dmitriy Sapozhnikov";
 #else
-const char * const MESSAGE_ABOUT = "BURO - backup utility version v0.2.1/W32 (c) 2017 Dmitriy Sapozhnikov";
+const char * const MESSAGE_ABOUT = "BURO - backup utility v0.3/W32 (c) 2017 Dmitriy Sapozhnikov";
 #endif
 const wchar_t * const MIRROR_SUB_DIR = L"mirror\\";
 const wchar_t * const MAIN_DB_FILE = L"buro.db";
 const char * const EVENTS_DB_TABLE = "events";
 const char * const CONFIG_DB_TABLE = "config";
-const char * const SECRETS_DB_TABLE = "secrets";
 const wchar_t * const NAME_SUFFIX_COMPRESSED = L".bz2";
 const wchar_t * const NAME_SUFFIX_ENCRYPTED = L".encrypted";
 //you can add here anything you want
