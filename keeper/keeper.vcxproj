@@ -81,14 +81,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\libs\libsodium\include;D:\libs\boost_1_63_0;D:\db-6.2.23\build_windows;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\libs\libsodium\Win32\Release\v140\static;D:\libs\berkeleyDB\win32\release;D:\libs\boost_1_63_0\stage32\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\libs\libsodium\include;D:\libs\boost_1_64_0_xp;D:\libs\db-6.2.32\build_windows;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\libs\libsodium\Win32\Release\v140\static;D:\libs\db-6.2.32\build_windows\Win32\Static_Release;D:\libs\boost_1_64_0_xp\stage32\lib;$(LibraryPath)</LibraryPath>
     <TargetName>buro</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\libs\libsodium\include;D:\libs\boost_1_63_0;D:\db-6.2.23\build_windows;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\libs\libsodium\x64\Release\v140\static;D:\libs\berkeleyDB\win64\release;D:\libs\boost_1_63_0\stage64\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\libs\libsodium\include;D:\libs\boost_1_64_0_xp;D:\libs\db-6.2.32\build_windows;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\libs\libsodium\x64\Release\v140\static;D:\libs\db-6.2.32\build_windows\x64\Static_Release;D:\libs\boost_1_64_0_xp\stage64\lib;$(LibraryPath)</LibraryPath>
     <TargetName>buro</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
