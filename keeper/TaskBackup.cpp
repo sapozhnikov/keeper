@@ -25,6 +25,11 @@ TaskBackup::~TaskBackup()
 {
 }
 
+bool PathsComparer(const wstring& path1, const wstring& path2)
+{
+	return path1 > path2;
+}
+
 void TaskBackup::Run()
 {
 	boost::system::error_code errorCode;
@@ -96,6 +101,7 @@ void TaskBackup::Run()
 				//do not move existing folder to storage
 
 				//check if exists
+				//FIXME:!!!!!!!!!!!!!!!!!!!!!!
 				if (!boost::filesystem::exists(mirrorPath_ + relativePath_, errorCode)) //or DB check?
 				{
 					//copy to mirror
@@ -152,7 +158,7 @@ void TaskBackup::Run()
 		ctx_.GetMainDB().cursor(nullptr, &mainCursor_, 0);
 		Dbt keyMain, dataMain;
 		//<is Directory, relative path>
-		vector<tuple<bool,std::wstring>> filesToDelete;
+		vector<tuple<bool, std::wstring>> filesToMove;
 
 		int result = mainCursor_->get(&keyMain, &dataMain, DB_FIRST);
 		keeper::CheckDbResult(result);
@@ -183,7 +189,7 @@ void TaskBackup::Run()
 					{
 						bool isDirectory = (pEvent->FileAttributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 						//if add DB record now, the cursor will skip some records, so keep names for later
-						filesToDelete.push_back(tuple<bool, std::wstring>(isDirectory, relativePath_));
+						filesToMove.push_back(tuple<bool, std::wstring>(isDirectory, relativePath_));
 					}
 				}
 			}
@@ -192,9 +198,17 @@ void TaskBackup::Run()
 		}//while
 
 		//the easyest way to move directories with subdirs and files in right order is sort them
-		sort(filesToDelete.begin(), filesToDelete.end());
+		sort(filesToMove.begin(), filesToMove.end(),
+			[](const auto& t1, const auto& t2){
+			const wstring& path1 = std::get<wstring>(t1);
+			const wstring& path2 = std::get<wstring>(t2);
+			if (path1.length() == path2.length())
+				return std::get<wstring>(t1) < std::get<wstring>(t2);
+			else
+				return path1.length() < path2.length();
+			});
 
-		for (const auto& fileInfo : filesToDelete)
+		for (const auto& fileInfo : filesToMove)
 		{
 			//move from mirror folder to delta folder
 			transformedPath_ = transformer.GetTransformedName(std::get<wstring>(fileInfo), std::get<bool>(fileInfo));
