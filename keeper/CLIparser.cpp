@@ -18,41 +18,41 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 {
 	options_description commonDesc("Allowed options");
 	commonDesc.add_options()
-		("backup", "backup files")
-		("restore", "restore files from backup")
-		("dumpdb", "dump backups database")
-		("purge", "erase old incremental changes");
+		("backup,B", "backup files")
+		("restore,R", "restore files from backup")
+		("purge,P", "erase old changes")
+		("dumpdb,D", "dump database");
 	
 	options_description otherOptionsDesc("Other options");
 	otherOptionsDesc.add_options()
-		("verbose", "verbose mode")
-		("printloglevel", "prepend log level to messages")
-		("printtimestamp", "prepend timestamp to messages")
+		("verbose,V", "verbose mode")
+		("printloglevel", "add log level to messages")
+		("printtimestamp", "add timestamp to messages")
 		("password", value<std::string>(), "password for accessing files")
-		("encodenames", "encode file names")
-		("include", wvalue<std::wstring>(), "mask to include files (only matched files will be included, if specified)")
-		("exclude", wvalue<std::wstring>(), "mask to exclude files");
+		("encryptnames", "encrypt file names")
+		("include,I", wvalue<std::wstring>(), "mask to include files (only matched files will be included, if specified)")
+		("exclude,E", wvalue<std::wstring>(), "mask to exclude files");
 
 	options_description backupDesc("Backup options");
 	backupDesc.add_options()
-		("srcdir", wvalue<std::wstring>(), "full path to directory to backup")
-		("dstdir", wvalue<std::wstring>(), "full path to directory there data will be stored")
+		("srcdir,S", wvalue<std::wstring>(), "full path to directory to backup")
+		("dstdir,D", wvalue<std::wstring>(), "full path to directory there data will be stored")
 		("compress", value<unsigned int>()->implicit_value(5), "compress files (1-faster, ..., 9-slower)");
 
 	options_description restoreDesc("Restore options");
 	restoreDesc.add_options()
-		("srcdir", wvalue<std::wstring>(), "full path to directory there is data stored")
-		("dstdir", wvalue<std::wstring>(), "full path to directory there data will be written")
-		("timestamp", value<std::string>(), "timestamp of the backup, or the latest, if not defined (format \"YYYY-MM-DD HH:mm:SS.SSS\")");
+		("srcdir,S", wvalue<std::wstring>(), "full path to directory there is data stored")
+		("dstdir,D", wvalue<std::wstring>(), "full path to directory there data will be written")
+		("timestamp,T", value<std::string>(), "restore files state at the given time, or the latest state, if not defined (format \"YYYY-MM-DD HH:mm:SS.SSS\")");
 
 	options_description dumpDesc("Dump DB options");
 	dumpDesc.add_options()
-		("srcdir", wvalue<std::wstring>(), "full path to directory there is data stored");
+		("srcdir,S", wvalue<std::wstring>(), "full path to directory there is data stored");
 
 	options_description purgeDesc("Purge options");
 	purgeDesc.add_options()
-		("srcdir", wvalue<std::wstring>(), "full path to directory there is data stored")
-		("older", value<std::string>(), "delete backups older than date (format \"YYYY-MM-DD HH:mm:SS.SSS\") or period (format P1Y2M3DT4H5M6S)");
+		("srcdir,S", wvalue<std::wstring>(), "full path to directory there is data stored")
+		("older,O", value<std::string>(), "delete changes older than date (format \"YYYY-MM-DD HH:mm:SS.SSS\") or period (format P1Y2M3DT4H5M6S)");
 
 	try
 	{
@@ -114,7 +114,7 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 			ConsoleLogger::SetAttrTimestampVisible(true);
 		}
 
-		if (varMapOther.count("encodenames"))
+		if (varMapOther.count("encryptnames"))
 		{
 			ctx.isEncryptedFileNames = true;
 		}
@@ -251,13 +251,13 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 		std::cout << commonDesc << std::endl;
 		std::cout << backupDesc << std::endl;
 		std::cout << restoreDesc << std::endl;
-		std::cout << dumpDesc << std::endl;
 		std::cout << purgeDesc << std::endl;
+		std::cout << dumpDesc << std::endl;
 		std::cout << otherOptionsDesc << std::endl;
 
 		return false;
 	}
-	catch (std::exception& e)
+	catch (...)
 	{
 		LOG_FATAL() << "Error while parsing arguments" << std::endl;
 	}

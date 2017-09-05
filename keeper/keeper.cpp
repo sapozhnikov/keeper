@@ -16,9 +16,10 @@ int wmain(int argc, wchar_t *argv[])
 	SetLogLevel(ConsoleLogger::LogLevel::info);
 
 	LOG_INFO() << MESSAGE_ABOUT << endl;
+	LOG_INFO() << "This software comes with absolutely no warranty" << endl;
 
 	if (!ParseCLITask(taskCtx, argc, argv))
-		exit(0);
+		exit(-1);
 
 	sodium_init();
 
@@ -27,6 +28,16 @@ int wmain(int argc, wchar_t *argv[])
 	SetAttrLogLevelVisible(true);
 	SetAttrTimestampVisible(true);
 #endif
+	auto normalExit = []()
+	{
+		LOG_INFO() << "Finished without errors" << endl;
+		exit(0);
+	};
+	auto abnormalExit = []()
+	{
+		LOG_INFO() << "Finished with errors" << endl;
+		exit(-1);
+	};
 
 	try
 	{
@@ -67,27 +78,27 @@ int wmain(int argc, wchar_t *argv[])
 	catch (DbException& e)
 	{
 		LOG_FATAL() << "DB error: " << e.what() << endl;
-		return -1;
+		abnormalExit();
 	}
 	catch (runtime_error& e)
 	{
 		LOG_FATAL() << e.what() << endl;
-		return -1;
+		abnormalExit();
 	}
 	catch (exception& e)
 	{
 		LOG_FATAL() << e.what() << endl;
-		return -1;
+		abnormalExit();
 	}
 	catch (...)
 	{
 		LOG_FATAL() << "Error occured" << endl;
-		return -1;
+		abnormalExit();
 	}
 
 	if (GetMaxLogLevelPrinted() > LogLevel::warning)
-		return -1;
+		abnormalExit();
 	else
-		return 0;
+		normalExit();
 }
 

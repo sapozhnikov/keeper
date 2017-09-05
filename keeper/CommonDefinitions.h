@@ -1,8 +1,8 @@
 #pragma once
 #ifdef _WIN64
-const char * const MESSAGE_ABOUT = "BURO - backup utility v0.3/W64 (c) 2017 Dmitriy Sapozhnikov";
+const char * const MESSAGE_ABOUT = "BURO - backup utility v1.0/W64 (c) 2017 Dmitriy Sapozhnikov";
 #else
-const char * const MESSAGE_ABOUT = "BURO - backup utility v0.3/W32 (c) 2017 Dmitriy Sapozhnikov";
+const char * const MESSAGE_ABOUT = "BURO - backup utility v1.0/W32 (c) 2017 Dmitriy Sapozhnikov";
 #endif
 const wchar_t * const MIRROR_SUB_DIR = L"mirror\\";
 const wchar_t * const MAIN_DB_FILE = L"buro.db";
