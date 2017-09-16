@@ -1,5 +1,6 @@
 # BURO - freeware command line incremental backup utility for MS Windows.<p> #
 It supports compression, encryption and filenames hiding by the option. You can access all your files and it's previous versions with your favorite file manager.<p>
+[Click here to download](https://github.com/sapozhnikov/keeper/releases "Downloads page")
 >I'll be very appreciated if someone will help me to correct this translation. Dmitriy.
 ## How to backup ##
 Simple example how to backup single folder:<p>
@@ -32,7 +33,7 @@ If you alter *file1* and run the same command like above, *file1* will be moved 
 
 >buro.db<p>
  
-If you want to enable compression, add argument *--compress". You can set compression ratio from 1 (faster) to 9 (slower):<p>
+If you want to enable compression, add argument "--compress". You can set compression ratio from 1 (faster) to 9 (slower):<p>
 >buro --backup --srcdir="<source directory\>" --dstdir="<destination directory\>" --compress=9<p>
 
 Extension ".bz2" will be added to the names at *destination directory*:<p>
@@ -50,7 +51,7 @@ Extension ".encrypted" will be added to the names at *destination directory* and
 >...<br>
 >fileN.encrypted<p>
 
-With argument *--encryptnames* file names converts to the unreadable garbage:<br>
+With argument *--encryptnames* file names will converts to an unreadable garbage:<br>
 >fZ2qYcAjWb<br>
 >QY2qYcAjWb<br>
 >...<br>
@@ -72,4 +73,4 @@ You can delete old changes to save disk space:<p>
 Argument *srcdir* is pointing to the repository folder. You can define the date (format is "YYYY-MM-DD HH:mm:SS.SSS") or period (format is "P1Y2M3DT4H5M6S"). For example, older than 1 month - P1M, older than 1 minute - PT1M, older than 1 year - P1Y.<p>
 
 ### Filtering ###
-It's possible to exclude some directories or files while backuping or restoring. Wildmasks "*" and "?" are supported. You can define more than one mask separated with symbol ";". If argument *--include* is defined, only matched files will be proceeded. If argument *--exclude* is defined, matched files will be skipped.  
+It's possible to exclude some directories or files while backuping or restoring. Wildmasks "*" and "?" are supported. You can define more than one mask, just separate them with symbol ";". If argument *--include* is defined, only matched files will be proceeded. If argument *--exclude* is defined, matched files will be skipped.  
