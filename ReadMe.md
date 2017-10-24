@@ -1,4 +1,5 @@
 # BURO - freeware command line incremental backup utility for MS Windows.<p> #
+<span style="display:block;text-align:center">![logo](logo_buro.png)</span><p>
 It supports compression, encryption and filenames hiding by the option. You can access all your files and it's previous versions with your favorite file manager.<p>
 [Click here to download](https://github.com/sapozhnikov/keeper/releases "Downloads page")
 >I'll be very appreciated if someone will help me to correct this translation. Dmitriy.
