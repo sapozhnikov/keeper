@@ -156,7 +156,7 @@ namespace FileIO
 			return true;
 		else
 		{
-			LOG_ERROR() << "Can't copy directory from " << source.wstring() << " to " << destination.wstring() << " : " << (errorCode.message()) << std::endl;
+			LOG_ERROR() << "Can't copy directory from " << source.wstring() << " to " << destination.wstring() << " : " << StrAnsiToOEM(errorCode.message()) << std::endl;
 			return false;
 		}
 	}
