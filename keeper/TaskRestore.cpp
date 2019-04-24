@@ -43,7 +43,7 @@ void TaskRestore::RestoreFromMirrorFolder(const Dbt& key, const DbFileEvent& dat
 	
 	if (ctx_.NamesChecker.IsFilteringEnabled)
 	{
-		if (!ctx_.NamesChecker.IsMatched(relativePath))
+		if (!ctx_.NamesChecker.IsFitPattern(relativePath))
 			return;
 	}
 
@@ -78,7 +78,7 @@ void TaskRestore::RestoreFromEventFolder(const Dbt & key, const DbFileEvent& dat
 
 	if (ctx_.NamesChecker.IsFilteringEnabled)
 	{
-		if (!ctx_.NamesChecker.IsMatched(relativePath))
+		if (!ctx_.NamesChecker.IsFitPattern(relativePath))
 			return;
 	}
 

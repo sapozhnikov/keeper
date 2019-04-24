@@ -56,7 +56,7 @@ std::wstring keeper::WildCardNameChecker::MaskToPattern(const std::wstring & mas
 	return pattern;
 }
 
-bool keeper::WildCardNameChecker::IsMatched(const std::wstring & fileName)
+bool keeper::WildCardNameChecker::IsFitPattern(const std::wstring & fileName)
 {
 	if (!IsFilteringEnabled)
 		return true;

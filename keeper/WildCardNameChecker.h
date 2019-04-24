@@ -9,7 +9,7 @@ namespace keeper
 		WildCardNameChecker();
 		void AddIncludeMask(const std::wstring& mask);
 		void AddExcludeMask(const std::wstring& mask);
-		bool IsMatched(const std::wstring& fileName);
+		bool IsFitPattern(const std::wstring& fileName);
 
 		bool IsFilteringEnabled = false;
 	

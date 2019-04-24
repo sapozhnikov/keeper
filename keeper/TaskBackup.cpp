@@ -71,16 +71,30 @@ void TaskBackup::Run()
 			break;
 		const wstring& sourceFullPath = dirIterator_->path().wstring();
 		relativePath_ = sourceFullPath.substr(skipPathCharsCount_, skipPathCharsCount_ - sourceFullPath.length());
+
+		bool isDirectory = is_directory(dirIterator_->path());
+
 		if (NamesFilteringEnabled)
 		{
-			if (!namesChecker.IsMatched(relativePath_))
+			if (!namesChecker.IsFitPattern(relativePath_))
 			{
+				if (isDirectory)
+					dirIterator_.no_push();
 				++dirIterator_;
 				continue;
 			}
 		}
 
-		bool isDirectory = is_directory(dirIterator_->path());
+		//skip symlinks
+		if (is_symlink(dirIterator_->path()))
+		{
+			LOG_INFO() << "Skipping symlink \"" << dirIterator_->path().wstring() << "\"" << endl;
+			if (isDirectory)
+				dirIterator_.no_push();
+			++dirIterator_;
+			continue;
+		}
+
 		transformedPath_ = transformer.GetTransformedName(relativePath_, isDirectory);
 
 		if (isDirectory)
