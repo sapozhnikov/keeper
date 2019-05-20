@@ -15,7 +15,7 @@ TaskBackup::TaskBackup(keeper::TaskContext& ctx) :
 	ctx_(ctx),
 	dirIterator_(ctx_.GetSourceDirectory()),
 	//initialDirectory_(ctx_.GetSourceDirectory()),
-	skipPathCharsCount_(ctx_.GetSourceDirectory().length())
+	skipPathCharsCount_((unsigned int)ctx_.GetSourceDirectory().length())
 {
 	currentTimeStamp_ = boost::posix_time::microsec_clock::local_time();
 	timestamp64_ = keeper::ConvertPtimeToMillisec(currentTimeStamp_);
@@ -44,7 +44,7 @@ void TaskBackup::Run()
 		//boost::filesystem::create_directory(mirrorPath_);
 		if (!keeper::FileIO::CreateDir(mirrorPath_))
 		{
-			LOG_FATAL() << "Can't continue" << std::endl;
+			LOG_FATAL() << "Can't create directory " << mirrorPath_ << std::endl;
 			return;
 		}
 	}
@@ -65,6 +65,7 @@ void TaskBackup::Run()
 	bool NamesFilteringEnabled = namesChecker.IsFilteringEnabled;
 
 	//start copy process
+	boost::system::error_code errCode;
 	while (true)
 	{
 		if (dirIterator_ == recursive_directory_iterator())
@@ -72,7 +73,13 @@ void TaskBackup::Run()
 		const wstring& sourceFullPath = dirIterator_->path().wstring();
 		relativePath_ = sourceFullPath.substr(skipPathCharsCount_, skipPathCharsCount_ - sourceFullPath.length());
 
-		bool isDirectory = is_directory(dirIterator_->path());
+		bool isDirectory = is_directory(dirIterator_->path(), errCode);
+		if (errCode.value() != boost::system::errc::success)
+		{
+			LOG_ERROR() << "Can't get info about " << sourceFullPath << std::endl;
+			++dirIterator_;
+			continue;
+		}
 
 		if (NamesFilteringEnabled)
 		{
@@ -86,7 +93,15 @@ void TaskBackup::Run()
 		}
 
 		//skip symlinks
-		if (is_symlink(dirIterator_->path()))
+		bool isSymlink = is_symlink(dirIterator_->path(), errCode);
+		if (errCode.value() != boost::system::errc::success)
+		{
+			LOG_ERROR() << "Can't get info about " << sourceFullPath << std::endl;
+			++dirIterator_;
+			continue;
+		}
+
+		if (isSymlink)
 		{
 			LOG_INFO() << "Skipping symlink \"" << dirIterator_->path().wstring() << "\"" << endl;
 			if (isDirectory)
