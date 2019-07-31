@@ -5,9 +5,11 @@
 #include "TaskDumpDB.h"
 #include "TaskRestore.h"
 #include "TaskPurge.h"
+#include "GlobalUtils.h"
 
 using namespace std;
 using namespace ConsoleLogger;
+using namespace keeper;
 
 keeper::TaskContext taskCtx;
 
@@ -82,12 +84,12 @@ int wmain(int argc, wchar_t *argv[])
 	}
 	catch (runtime_error& e)
 	{
-		LOG_FATAL() << e.what() << endl;
+		LOG_FATAL() << StrAnsiToOEM(e.what()) << endl;
 		abnormalExit();
 	}
 	catch (exception& e)
 	{
-		LOG_FATAL() << e.what() << endl;
+		LOG_FATAL() << StrAnsiToOEM(e.what()) << endl;
 		abnormalExit();
 	}
 	catch (...)

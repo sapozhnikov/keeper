@@ -20,4 +20,6 @@ namespace keeper
 	void CheckDbResult(int result);
 
 	std::string PasswordToKey(const std::string& password);
+
+	std::string StrAnsiToOEM(const std::string& str);
 }

@@ -172,7 +172,18 @@ void TaskBackup::Run()
 				}
 			}
 		}
-		dirIterator_++;
+		dirIterator_.increment(errCode);
+		if (errCode) //failed to enter directory
+		{
+			if (isDirectory)
+			{
+				LOG_ERROR() << "No access to " << dirIterator_->path().wstring() << std::endl;
+				dirIterator_.no_push();
+				++dirIterator_;
+			}
+			else
+				throw std::runtime_error(errCode.message());
+		}
 	}
 
 	//search for deleted files

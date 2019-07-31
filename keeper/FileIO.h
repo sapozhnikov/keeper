@@ -5,8 +5,6 @@ namespace keeper
 {
 namespace FileIO
 {
-	std::string StrAnsiToOEM(const std::string& str);
-
 	bool CopySingleFile(const boost::filesystem::path& source, const boost::filesystem::path& destination, bool failIfExists = false);
 	bool MoveSingleFile(const boost::filesystem::path& source, const boost::filesystem::path& destination);
 	bool RemoveDir(const boost::filesystem::path& dir);

@@ -175,4 +175,12 @@ namespace keeper
 
 		return s.str();
 	}
+
+	std::string keeper::StrAnsiToOEM(const std::string& str)
+	{
+		std::unique_ptr<char[]> buff = std::make_unique<char[]>(str.length() + 1);
+		CharToOemBuffA(str.c_str(), buff.get(), DWORD(str.length() + 1));
+		std::string result(buff.get());
+		return result;
+	}
 }

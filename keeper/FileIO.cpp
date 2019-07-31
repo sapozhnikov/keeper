@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "FileIO.h"
-#include "ConsoleLogger.h"
+#include "GlobalUtils.h"
 
 using namespace ConsoleLogger;
 using namespace boost::filesystem;
@@ -9,14 +9,6 @@ namespace keeper
 {
 namespace FileIO
 {
-	std::string StrAnsiToOEM(const std::string& str)
-	{
-		std::unique_ptr<char[]> buff = std::make_unique<char[]>(str.length() + 1);
-		CharToOemBuffA(str.c_str(), buff.get(), DWORD(str.length() + 1));
-		std::string result(buff.get());
-		return result;
-	}
-
 	std::string GetLastErrorAsString()
 	{
 		//Get the error message, if any.
