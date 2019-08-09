@@ -29,11 +29,11 @@ namespace keeper
 		const boost::posix_time::ptime& GetRestoreTimeStamp() const;
 		const boost::posix_time::ptime& GetPurgeTimeStamp() const;
 		bool SetPurgeTimestampFromArg(std::string timestamp);
-		bool OpenDatabase(bool LoadConfig = true);
+		bool OpenDatabase(bool CreateFreshDB = false);
 		bool CreateDatabase();
 		bool CompressDatabase();
-		void CloseDatabase();
 		Db& GetMainDB();
+		DbEnv& GetEnv();
 
 		DWORD CompressionLevel = 0;
 		std::string DbPassword;
@@ -57,10 +57,17 @@ namespace keeper
 
 		std::wstring sourceDirectory_;
 		std::wstring destinationDirectory_;
-		Db eventsDb_, configDb_;
+		//std::wstring envDirectory_;
+		Db* eventsDb_ = nullptr;
+		Db* configDb_ = nullptr;
+
+		void ConfigureEnv();
+		DbEnv* env_ = nullptr;
+
 		boost::posix_time::ptime restoreTimeStamp_ = boost::posix_time::not_a_date_time;
 		boost::posix_time::ptime purgeTimeStamp_ = boost::posix_time::not_a_date_time;
 		std::wstring GenerateDbPath();
+		std::wstring GenerateEnvPath();
 		std::string DbKey; //key derived from password
 	};
 }

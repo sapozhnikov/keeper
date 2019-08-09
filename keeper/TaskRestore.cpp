@@ -128,8 +128,6 @@ bool TaskRestore::Run()
 	{
 		if (mainCursor != nullptr)
 			mainCursor->close();
-
-		ctx_.CloseDatabase();
 	};
 
 	Dbt keyMain, dataMain/*, dataMainPrev*/;

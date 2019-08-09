@@ -35,6 +35,5 @@ private:
 	int64_t timestamp64_;
 
 	FileState GetFileState();
-	Dbc* mainCursor_ = nullptr;
 };
 

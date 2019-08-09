@@ -176,6 +176,7 @@
     <ClInclude Include="TaskDumpDB.h" />
     <ClInclude Include="TaskPurge.h" />
     <ClInclude Include="TaskRestore.h" />
+    <ClInclude Include="TnxGuard.h" />
     <ClInclude Include="utf16_compress.h" />
     <ClInclude Include="WildCardNameChecker.h" />
   </ItemGroup>
@@ -198,6 +199,7 @@
     <ClCompile Include="TaskDumpDB.cpp" />
     <ClCompile Include="TaskPurge.cpp" />
     <ClCompile Include="TaskRestore.cpp" />
+    <ClCompile Include="TnxGuard.cpp" />
     <ClCompile Include="utf16_compress.cpp" />
     <ClCompile Include="WildCardNameChecker.cpp" />
   </ItemGroup>

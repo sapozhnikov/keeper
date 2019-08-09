@@ -81,6 +81,9 @@
     <ClInclude Include="WildCardNameChecker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TnxGuard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -126,6 +129,9 @@
       <Filter>Source Files\FilesTransform</Filter>
     </ClCompile>
     <ClCompile Include="WildCardNameChecker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TnxGuard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

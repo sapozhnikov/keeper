@@ -31,8 +31,6 @@ bool TaskDumpDB::Run()
 	{
 		if (mainCursor != nullptr)
 			mainCursor->close();
-
-		ctx_.CloseDatabase();
 	};
 
 	int result;

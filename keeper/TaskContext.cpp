@@ -29,10 +29,9 @@ namespace keeper
 			path.append(L"\\");
 	}
 
-	keeper::TaskContext::TaskContext() :
-		eventsDb_(nullptr, 0),
-		configDb_(nullptr, 0)
+	keeper::TaskContext::TaskContext()
 	{
+		//envDirectory_ = std::wstring();
 	}
 	
 	keeper::TaskContext::~TaskContext()
@@ -40,6 +39,20 @@ namespace keeper
 		sodium_memzero(FileEncodeKey_, crypto_stream_chacha20_KEYBYTES);
 		sodium_memzero(NamesEncodeKey_, crypto_stream_chacha20_KEYBYTES);
 		sodium_memzero(NamesEncodeNonce_, crypto_stream_chacha20_NONCEBYTES);
+
+		if (eventsDb_)
+			eventsDb_->close(0);
+		if (configDb_)
+			configDb_->close(0);
+		if (env_)
+			env_->close(0);
+
+		if (eventsDb_)
+			delete(eventsDb_);
+		if (configDb_)
+			delete(configDb_);
+		if (env_)
+			delete(env_);
 	}
 
 	bool TaskContext::SetSourceDirectory(std::wstring SourceDirectory)
@@ -148,11 +161,39 @@ namespace keeper
 			return GetDestinationDirectory() + MAIN_DB_FILE;
 		case keeper::Task::Purge:
 		case keeper::Task::Restore:
-		//case keeper::Task::List:
 		case keeper::Task::DumpDB:
 			return GetSourceDirectory() + MAIN_DB_FILE;
 		default:
 			return std::wstring();
+		}
+	}
+
+	std::wstring keeper::TaskContext::GenerateEnvPath()
+	{
+		switch (Task)
+		{
+		case keeper::Task::Backup:
+			return GetDestinationDirectory() + ENV_SUB_DIR;
+		case keeper::Task::Purge:
+		case keeper::Task::Restore:
+		case keeper::Task::DumpDB:
+			return GetSourceDirectory() + ENV_SUB_DIR;
+		default:
+			return std::wstring();
+		}
+	}
+
+	void keeper::TaskContext::ConfigureEnv()
+	{
+		if (!env_)
+			env_ = new DbEnv(0u);
+		if (env_)
+		{
+			env_->set_cachesize(0, ENV_CACHE_SIZE, 1);
+			env_->set_lg_bsize(LOG_BUF_SIZE);
+			env_->set_lg_max(LOG_FILE_SIZE);
+			env_->log_set_config(/*DB_LOG_AUTO_REMOVE |*/ DB_LOG_DIRECT, 1);
+			env_->open(WstringToUTF8(GenerateEnvPath()).c_str(), DB_CREATE | DB_RECOVER | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN, 0);
 		}
 	}
 
@@ -252,49 +293,60 @@ namespace keeper
 	}
 #endif
 
-	bool TaskContext::OpenDatabase(bool LoadConfig)
+	bool TaskContext::OpenDatabase(bool CreateFreshDB)
 	{
 		using namespace std;
 		wstring dbFullPath = GenerateDbPath();
+		//wstring envFullPath = GenerateEnvPath();
 
 		if (!boost::filesystem::exists(dbFullPath))
 		{
 			//no DB exists
-			return false;
+			if (!CreateFreshDB)
+				return false;
 		}
 		string dbNameUTF8 = keeper::WstringToUTF8(dbFullPath);
 
-		eventsDb_.set_flags(DB_DUPSORT);
-		eventsDb_.set_dup_compare(DbEventsCompare);
-		eventsDb_.set_bt_compare(DbPathsCompare);
-		//screw it, its buggy
-		//eventsDb_.set_bt_prefix(DbPathsPrefix);
 
 		try
 		{
+			ConfigureEnv();
+
+			if (!eventsDb_)
+				eventsDb_ = new Db(env_, 0);
+			eventsDb_->set_flags(DB_DUPSORT);
+			eventsDb_->set_dup_compare(DbEventsCompare);
+			eventsDb_->set_bt_compare(DbPathsCompare);
+			//screw it, its buggy
+			//eventsDb_.set_bt_prefix(DbPathsPrefix);
+
+			if (!configDb_)
+				configDb_ = new Db(env_, 0);
+
 			if (!DbPassword.empty())
 			{
 				if (DbKey.empty())
 					DbKey = PasswordToKey(DbPassword);
 
-				eventsDb_.set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
-				configDb_.set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
+				eventsDb_->set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
+				configDb_->set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
 			}
 
 			//open existing
-			eventsDb_.open(nullptr,
+			eventsDb_->open(nullptr,
 				dbNameUTF8.c_str(),
 				EVENTS_DB_TABLE,
 				DB_BTREE,
-				0,
+				(CreateFreshDB ? DB_CREATE : 0) | DB_AUTO_COMMIT,
 				0);
 
-			configDb_.open(nullptr,
+			configDb_->open(nullptr,
 				dbNameUTF8.c_str(),
 				CONFIG_DB_TABLE,
 				DB_BTREE,
-				0,
+				(CreateFreshDB ? DB_CREATE : 0) | DB_AUTO_COMMIT,
 				0);
+
 		}
 		catch (DbException)
 		{
@@ -302,8 +354,9 @@ namespace keeper
 			throw;
 		}
 
-		if (LoadConfig)
+		if (!CreateFreshDB)
 		{
+			//load config from DB
 			DWORD CompressionLevelSaved;
 			if (!GetConfigValueDWord(PARAM_COMPRESSION, CompressionLevelSaved))
 				throw /*std::runtime_error(string("Can't load parameter: ") + PARAM_COMPRESSION)*/;
@@ -372,10 +425,19 @@ namespace keeper
 
 		string dbNameUTF8 = keeper::WstringToUTF8(dbFullPath);
 
+		std::wstring  envDirectory = GenerateEnvPath();
+		if (!boost::filesystem::exists(envDirectory))
+		{
+			boost::filesystem::create_directories(envDirectory);
+			SetFileAttributes(envDirectory.c_str(), GetFileAttributes(envDirectory.c_str()) | FILE_ATTRIBUTE_HIDDEN);
+		}
+
+		/*
 		try
 		{
+			ConfigureEnv();
 			//workaround for Berkeley DB bug - can't create more than 2 DB's in same file at once
-			Db tmpDb(nullptr, 0);
+			Db tmpDb(&env_, 0);
 			tmpDb.set_flags(DB_DUPSORT);
 			tmpDb.set_dup_compare(DbEventsCompare);
 			tmpDb.set_bt_compare(DbPathsCompare);
@@ -386,15 +448,14 @@ namespace keeper
 
 			if (!DbPassword.empty())
 				tmpDb.set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
+				tmpDb.open(nullptr,
+					dbNameUTF8.c_str(),
+					EVENTS_DB_TABLE,
+					DB_BTREE,
+					DB_CREATE,
+					0);
 
-			tmpDb.open(nullptr,
-				dbNameUTF8.c_str(),
-				EVENTS_DB_TABLE,
-				DB_BTREE,
-				DB_CREATE /*| DB_EXCL*/,
-				0);
-
-			Db tmpDb2(nullptr, 0);
+			Db tmpDb2(&env_, 0);
 			if (!DbPassword.empty())
 				tmpDb2.set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
 
@@ -402,20 +463,22 @@ namespace keeper
 				dbNameUTF8.c_str(),
 				CONFIG_DB_TABLE,
 				DB_BTREE,
-				DB_CREATE /*| DB_EXCL*/,
+				DB_CREATE | DB_AUTO_COMMIT,
 				0);
 
+			env_.txn_checkpoint(0, 0, 0);
 			tmpDb.close(0);
 			tmpDb2.close(0);
+			env_.close(0);
 		}
 		catch (DbException)
 		{
 			LOG_FATAL() << "Database create failed" << endl;
-			//eventsDb_.err(e.get_errno(), "Database create failed");
 			throw;
 		}
+		*/
 
-		if (OpenDatabase(false))
+		if (OpenDatabase(true))
 		{
 			//save config to DB
 			if (CompressionLevel > 9)
@@ -440,6 +503,9 @@ namespace keeper
 			else
 				SetConfigValueDWord(PARAM_NAMES_ENCODE, 0);
 
+			if (env_)
+				env_->txn_checkpoint(0, 0, 0);
+
 			DisplayTaskConfig();
 
 			return true;
@@ -452,26 +518,30 @@ namespace keeper
 	{
 		DB_COMPACT cData = { 0 };
 		cData.compact_fillpercent = 80;
-		eventsDb_.compact(nullptr, nullptr, nullptr, &cData, DB_FREELIST_ONLY, nullptr);
-		return true;
-	}
+		if (eventsDb_)
+			eventsDb_->compact(nullptr, nullptr, nullptr, &cData, DB_FREELIST_ONLY, nullptr);
 
-	void TaskContext::CloseDatabase()
-	{
-		eventsDb_.close(0);
-		configDb_.close(0);
+		//removing DB log files
+		if (env_)
+			env_->log_archive(nullptr, DB_ARCH_REMOVE);
+		return true;
 	}
 
 	Db & keeper::TaskContext::GetMainDB()
 	{
-		return eventsDb_;
+		return *eventsDb_;
+	}
+
+	DbEnv & keeper::TaskContext::GetEnv()
+	{
+		return *env_;
 	}
 
 	bool TaskContext::SetConfigValueDWord(const std::string & name, DWORD val)
 	{
 		Dbt key = Dbt((void*)name.c_str(), name.length());
 		Dbt data = Dbt((void*)&val, sizeof(DWORD));
-		configDb_.put(nullptr, &key, &data, DB_OVERWRITE_DUP);
+		configDb_->put(nullptr, &key, &data, DB_OVERWRITE_DUP);
 
 		return true;
 	}
@@ -481,7 +551,7 @@ namespace keeper
 		Dbt key((void*)name.c_str(), name.length());
 		Dbt data;
 
-		int result = configDb_.get(nullptr, &key, &data, 0);
+		int result = configDb_->get(nullptr, &key, &data, 0);
 		if (result != 0)
 		{
 			LOG_ERROR() << "Can't read value from DB: " << name << std::endl;
@@ -497,7 +567,7 @@ namespace keeper
 	{
 		Dbt key = Dbt((void*)name.c_str(), name.length());
 		Dbt data = Dbt(val, len);
-		configDb_.put(nullptr, &key, &data, DB_OVERWRITE_DUP);
+		configDb_->put(nullptr, &key, &data, DB_OVERWRITE_DUP);
 
 		return true;
 	}
@@ -506,7 +576,7 @@ namespace keeper
 		Dbt key((void*)name.c_str(), name.length());
 		Dbt data;
 
-		int result = configDb_.get(nullptr, &key, &data, 0);
+		int result = configDb_->get(nullptr, &key, &data, 0);
 		if (result != 0)
 		{
 			LOG_ERROR() << "Can't read value from DB: " << name << std::endl;

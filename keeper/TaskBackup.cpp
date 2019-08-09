@@ -51,14 +51,7 @@ void TaskBackup::Run()
 
 	storeOldPath_ = ctx_.GetDestinationDirectory() + keeper::PTimeToWstringSafeSymbols(currentTimeStamp_) + L"\\";
 
-	ctx_.GetMainDB().cursor(nullptr, &mainCursor_, 0);
-	BOOST_SCOPE_EXIT_ALL(&)
-	{
-		if (mainCursor_ != nullptr)
-			mainCursor_->close();
-
-		ctx_.CloseDatabase();
-	};
+	//ctx_.GetMainDB().cursor(nullptr, &mainCursor_, 0);
 
 	keeper::FilesTransformer transformer(ctx_);
 	keeper::WildCardNameChecker& namesChecker = ctx_.NamesChecker;
@@ -189,12 +182,19 @@ void TaskBackup::Run()
 	//search for deleted files
 	if (!isFirstBackup)
 	{
-		ctx_.GetMainDB().cursor(nullptr, &mainCursor_, 0);
+		Dbc* mainCursor = nullptr;
+		ctx_.GetMainDB().cursor(nullptr, &mainCursor, 0);
+		BOOST_SCOPE_EXIT_ALL(&)
+		{
+			if (mainCursor != nullptr)
+				mainCursor->close();
+		};
+
 		Dbt keyMain, dataMain;
 		//<is Directory, relative path>
 		vector<tuple<bool, std::wstring>> filesToMove;
 
-		int result = mainCursor_->get(&keyMain, &dataMain, DB_FIRST);
+		int result = mainCursor->get(&keyMain, &dataMain, DB_FIRST);
 		keeper::CheckDbResult(result);
 
 		while (true)
@@ -207,7 +207,7 @@ void TaskBackup::Run()
 				//move to the last record with the same key
 				while (true)
 				{
-					result = mainCursor_->get(&keyMain, &dataMain, DB_NEXT_DUP);
+					result = mainCursor->get(&keyMain, &dataMain, DB_NEXT_DUP);
 					keeper::CheckDbResult(result);
 					if (result == DB_NOTFOUND)
 						break;
@@ -227,7 +227,7 @@ void TaskBackup::Run()
 					}
 				}
 			}
-			result = mainCursor_->get(&keyMain, &dataMain, DB_NEXT_NODUP);
+			result = mainCursor->get(&keyMain, &dataMain, DB_NEXT_NODUP);
 			keeper::CheckDbResult(result);
 		}//while
 
@@ -295,15 +295,22 @@ TaskBackup::FileState TaskBackup::GetFileState()
 	//get the last event
 	Dbt key = keeper::WstringToDbt(relativePath_);
 	Dbt data;
+	Dbc* mainCursor = nullptr;
+	BOOST_SCOPE_EXIT_ALL(&)
+	{
+		if (mainCursor != nullptr)
+			mainCursor->close();
+	};
 
-	int result = mainCursor_->get(&key, &data, DB_SET);
+	ctx_.GetMainDB().cursor(nullptr, &mainCursor, 0);
+	int result = mainCursor->get(&key, &data, DB_SET);
 	keeper::CheckDbResult(result);
 	if (result == DB_NOTFOUND)
 		return TaskBackup::FileState::New; //something wrong
 
 	while (true)
 	{
-		result = mainCursor_->get(&key, &data, DB_NEXT_DUP);
+		result = mainCursor->get(&key, &data, DB_NEXT_DUP);
 		keeper::CheckDbResult(result);
 		if (result == DB_NOTFOUND)
 			break;

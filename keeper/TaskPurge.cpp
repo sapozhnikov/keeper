@@ -46,8 +46,6 @@ bool TaskPurge::Run()
 	{
 		if (mainCursor != nullptr)
 			mainCursor->close();
-
-		ctx_.CloseDatabase();
 	};
 
 	int64_t timestamp64 = keeper::ConvertPtimeToMillisec(purgeTimeStamp);
