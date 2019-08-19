@@ -183,6 +183,16 @@ namespace keeper
 		}
 	}
 
+	void EnvErrHandler(const DbEnv *, const char *errpfx, const char *errstr)
+	{
+		const unsigned int ERR_STRING_MAX = 1024;
+		wchar_t wstr[ERR_STRING_MAX];
+		memset(wstr, 0, sizeof(wstr));
+		MultiByteToWideChar(CP_ACP, 0, errstr, strlen(errstr),
+			wstr, ERR_STRING_MAX - 1);
+		LOG_ERROR() << errpfx << wstr << std::endl;
+	}
+
 	void keeper::TaskContext::ConfigureEnv()
 	{
 		if (!env_)
@@ -195,6 +205,8 @@ namespace keeper
 			env_->log_set_config(/*DB_LOG_AUTO_REMOVE |*/ DB_LOG_DIRECT, 1);
 			env_->open(WstringToUTF8(GenerateEnvPath()).c_str(), DB_CREATE | DB_RECOVER | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN, 0);
 		}
+		env_->set_errpfx("ENVIRONMENT:");
+		env_->set_errcall(EnvErrHandler);
 	}
 
 	void keeper::TaskContext::DisplayTaskConfig() const
@@ -346,7 +358,11 @@ namespace keeper
 				DB_BTREE,
 				(CreateFreshDB ? DB_CREATE : 0) | DB_AUTO_COMMIT,
 				0);
-
+			
+			eventsDb_->set_errpfx("EVENTS DB:");
+			eventsDb_->set_errcall(EnvErrHandler);
+			configDb_->set_errpfx("CONFIG DB:");
+			configDb_->set_errcall(EnvErrHandler);
 		}
 		catch (DbException)
 		{
