@@ -197,14 +197,19 @@ namespace keeper
 	{
 		if (!env_)
 			env_ = new DbEnv(0u);
-		if (env_)
+
+		env_->set_cachesize(0, ENV_CACHE_SIZE, 1);
+		env_->set_lg_bsize(LOG_BUF_SIZE);
+		env_->set_lg_max(LOG_FILE_SIZE);
+		env_->log_set_config(/*DB_LOG_AUTO_REMOVE |*/ DB_LOG_DIRECT, 1);
+		if (!DbPassword.empty())
 		{
-			env_->set_cachesize(0, ENV_CACHE_SIZE, 1);
-			env_->set_lg_bsize(LOG_BUF_SIZE);
-			env_->set_lg_max(LOG_FILE_SIZE);
-			env_->log_set_config(/*DB_LOG_AUTO_REMOVE |*/ DB_LOG_DIRECT, 1);
-			env_->open(WstringToUTF8(GenerateEnvPath()).c_str(), DB_CREATE | DB_RECOVER | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN, 0);
+			if (DbKey.empty())
+				DbKey = PasswordToKey(DbPassword);
+
+			env_->set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
 		}
+		env_->open(WstringToUTF8(GenerateEnvPath()).c_str(), DB_CREATE | DB_RECOVER | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN | (!DbKey.empty() ? DB_ENCRYPT : 0), 0);
 		env_->set_errpfx("ENVIRONMENT:");
 		env_->set_errcall(EnvErrHandler);
 	}
@@ -230,7 +235,7 @@ namespace keeper
 	}
 
 	//function to compare file names in the b-tree
-	int DbPathsCompare(Db *dbp, const Dbt *data1, const Dbt *data2, size_t *locp)
+	int DbPathsCompare(Db*, const Dbt *data1, const Dbt *data2, size_t *locp)
 	{
 		locp = nullptr;
 		auto dataLen1 = data1->get_size();
@@ -255,7 +260,7 @@ namespace keeper
 		return result;
 	}
 #if (1)
-	size_t DbPathsPrefix(DB *dbp, const DBT *data1, const DBT *data2)
+	size_t DbPathsPrefix(DB*, const DBT *data1, const DBT *data2)
 	{
 		auto dataLen1 = data1->size;
 		auto dataLen2 = data2->size;
@@ -326,7 +331,7 @@ namespace keeper
 
 			if (!eventsDb_)
 				eventsDb_ = new Db(env_, 0);
-			eventsDb_->set_flags(DB_DUPSORT);
+			eventsDb_->set_flags((!DbPassword.empty() ? DB_ENCRYPT : 0) | DB_DUPSORT);
 			eventsDb_->set_dup_compare(DbEventsCompare);
 			eventsDb_->set_bt_compare(DbPathsCompare);
 			//screw it, its buggy
@@ -334,15 +339,7 @@ namespace keeper
 
 			if (!configDb_)
 				configDb_ = new Db(env_, 0);
-
-			if (!DbPassword.empty())
-			{
-				if (DbKey.empty())
-					DbKey = PasswordToKey(DbPassword);
-
-				eventsDb_->set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
-				configDb_->set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
-			}
+			configDb_->set_flags(!DbPassword.empty() ? DB_ENCRYPT : 0);
 
 			//open existing
 			eventsDb_->open(nullptr,
