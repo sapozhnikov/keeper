@@ -5,6 +5,7 @@
 #include <boost\filesystem.hpp>
 
 using namespace ConsoleLogger;
+extern DbEnv* BuroEnv;
 
 namespace keeper
 {
@@ -193,10 +194,10 @@ namespace keeper
 		LOG_ERROR() << errpfx << wstr << std::endl;
 	}
 
-	void keeper::TaskContext::ConfigureEnv()
+	void TaskContext::ConfigureEnv()
 	{
 		if (!env_)
-			env_ = new DbEnv(0u);
+			BuroEnv = env_ = new DbEnv(0u);
 
 		env_->set_cachesize(0, ENV_CACHE_SIZE, 1);
 		env_->set_lg_bsize(LOG_BUF_SIZE);

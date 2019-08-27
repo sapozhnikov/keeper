@@ -13,6 +13,10 @@ using namespace keeper;
 
 keeper::TaskContext taskCtx;
 
+//for the emergency DB flush
+DbEnv* BuroEnv = nullptr;
+BOOL WINAPI CtrlHandler(DWORD fdwCtrlType);
+
 int wmain(int argc, wchar_t *argv[])
 {
 	SetLogLevel(ConsoleLogger::LogLevel::info);
@@ -40,6 +44,9 @@ int wmain(int argc, wchar_t *argv[])
 		LOG_INFO() << "Finished with errors" << endl;
 		exit(-1);
 	};
+
+	if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE)CtrlHandler, TRUE))
+		LOG_WARNING() << "Could not set control handler" << std::endl;
 
 	try
 	{
@@ -104,3 +111,21 @@ int wmain(int argc, wchar_t *argv[])
 		normalExit();
 }
 
+BOOL WINAPI CtrlHandler(DWORD fdwCtrlType)
+{
+	using namespace std;
+	switch (fdwCtrlType)
+	{
+	case CTRL_C_EVENT:
+	case CTRL_CLOSE_EVENT:
+	case CTRL_BREAK_EVENT:
+	case CTRL_LOGOFF_EVENT:
+	case CTRL_SHUTDOWN_EVENT:
+		//praise the Void
+		if (BuroEnv)
+			BuroEnv->txn_checkpoint(0, 0, 0);
+		return true;
+	default:
+		return FALSE;
+	}
+}
