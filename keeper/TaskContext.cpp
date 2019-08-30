@@ -54,6 +54,7 @@ namespace keeper
 			delete(configDb_);
 		if (env_)
 			delete(env_);
+		BuroEnv = nullptr;
 	}
 
 	bool TaskContext::SetSourceDirectory(std::wstring SourceDirectory)
@@ -445,52 +446,6 @@ namespace keeper
 			boost::filesystem::create_directories(envDirectory);
 			SetFileAttributes(envDirectory.c_str(), GetFileAttributes(envDirectory.c_str()) | FILE_ATTRIBUTE_HIDDEN);
 		}
-
-		/*
-		try
-		{
-			ConfigureEnv();
-			//workaround for Berkeley DB bug - can't create more than 2 DB's in same file at once
-			Db tmpDb(&env_, 0);
-			tmpDb.set_flags(DB_DUPSORT);
-			tmpDb.set_dup_compare(DbEventsCompare);
-			tmpDb.set_bt_compare(DbPathsCompare);
-			tmpDb.set_bt_prefix(DbPathsPrefix);
-
-			if (!DbPassword.empty() && DbKey.empty())
-				DbKey = PasswordToKey(DbPassword);
-
-			if (!DbPassword.empty())
-				tmpDb.set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
-				tmpDb.open(nullptr,
-					dbNameUTF8.c_str(),
-					EVENTS_DB_TABLE,
-					DB_BTREE,
-					DB_CREATE,
-					0);
-
-			Db tmpDb2(&env_, 0);
-			if (!DbPassword.empty())
-				tmpDb2.set_encrypt(DbKey.c_str(), DB_ENCRYPT_AES);
-
-			tmpDb2.open(nullptr,
-				dbNameUTF8.c_str(),
-				CONFIG_DB_TABLE,
-				DB_BTREE,
-				DB_CREATE | DB_AUTO_COMMIT,
-				0);
-
-			env_.txn_checkpoint(0, 0, 0);
-			tmpDb.close(0);
-			tmpDb2.close(0);
-			env_.close(0);
-		}
-		catch (DbException)
-		{
-			LOG_FATAL() << "Database create failed" << endl;
-			throw;
-		}
-		*/
 
 		if (OpenDatabase(true))
 		{
