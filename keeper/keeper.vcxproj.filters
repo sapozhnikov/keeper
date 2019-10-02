@@ -25,6 +25,9 @@
     <Filter Include="Source Files\FilesTransform">
       <UniqueIdentifier>{8957d651-2062-409c-922c-3495de3d6e42}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tests">
+      <UniqueIdentifier>{df74a085-a161-423f-9a6b-cf0b6871b483}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -133,6 +136,9 @@
     </ClCompile>
     <ClCompile Include="TnxGuard.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Generic.cpp">
+      <Filter>Tests</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

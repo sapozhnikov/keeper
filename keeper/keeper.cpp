@@ -16,7 +16,7 @@ keeper::TaskContext taskCtx;
 //for the emergency DB flush
 DbEnv* BuroEnv = nullptr;
 BOOL WINAPI CtrlHandler(DWORD fdwCtrlType);
-
+#ifdef DOCTEST_CONFIG_DISABLE
 int wmain(int argc, wchar_t *argv[])
 {
 	SetLogLevel(ConsoleLogger::LogLevel::info);
@@ -110,6 +110,7 @@ int wmain(int argc, wchar_t *argv[])
 	else
 		normalExit();
 }
+#endif //DOCTEST_CONFIG_DISABLE
 
 BOOL WINAPI CtrlHandler(DWORD fdwCtrlType)
 {
