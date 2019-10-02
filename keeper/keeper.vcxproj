@@ -251,7 +251,7 @@
     <ClCompile Include="ConsoleLogger.cpp" />
     <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="FilesTransformer.cpp" />
-    <ClCompile Include="Generic.cpp">
+    <ClCompile Include="TestMain.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GlobalUtils.cpp" />
@@ -273,6 +273,9 @@
     <ClCompile Include="TnxGuard.cpp" />
     <ClCompile Include="utf16_compress.cpp" />
     <ClCompile Include="WildCardNameChecker.cpp" />
+    <ClCompile Include="WildCardNamesCheckerTest.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="keeper.rc" />

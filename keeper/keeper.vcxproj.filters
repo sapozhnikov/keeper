@@ -137,7 +137,10 @@
     <ClCompile Include="TnxGuard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Generic.cpp">
+    <ClCompile Include="WildCardNamesCheckerTest.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="TestMain.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
   </ItemGroup>
