@@ -12,7 +12,7 @@ keeper::WildCardNameChecker::WildCardNameChecker()
 void keeper::WildCardNameChecker::AddMasksToSet(const wstring & masks, std::vector<wregex>& s)
 {
 	vector<wstring> masksVect;
-	boost::split(masksVect, masks, std::bind2nd(std::equal_to<wchar_t>(), MASKS_SEPARATOR));
+	boost::split(masksVect, masks, [](wchar_t ch) -> bool { return ch == (wchar_t)MASKS_SEPARATOR; });
 	
 	for (auto const& mask : masksVect)
 	{
