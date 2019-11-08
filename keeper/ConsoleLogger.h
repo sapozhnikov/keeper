@@ -143,7 +143,7 @@ namespace ConsoleLogger
 				return std::string();
 
 			std::vector<char> buffer(length);
-			::WideCharToMultiByte(CP_OEMCP, 0, source.data(), (int)source.length(), &buffer[0], length, NULL, NULL);
+			::WideCharToMultiByte(CP_OEMCP, 0, source.data(), (int)source.length(), buffer.data(), length, NULL, NULL);
 
 			return std::string(buffer.begin(), buffer.end());
 		}
@@ -161,7 +161,7 @@ namespace ConsoleLogger
 				return std::string();
 
 			std::vector<char> buffer(length);
-			::WideCharToMultiByte(CP_OEMCP, 0, p, sourceLength, &buffer[0], length, NULL, NULL);
+			::WideCharToMultiByte(CP_OEMCP, 0, p, sourceLength, buffer.data(), length, NULL, NULL);
 
 			return std::string(buffer.begin(), buffer.end());
 		}
