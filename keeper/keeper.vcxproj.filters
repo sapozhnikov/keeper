@@ -72,19 +72,25 @@
     <ClInclude Include="PathEncoder.h">
       <Filter>Header Files\FilesTransform</Filter>
     </ClInclude>
-    <ClInclude Include="utf16_compress.h">
-      <Filter>Header Files\FilesTransform</Filter>
-    </ClInclude>
     <ClInclude Include="FilesTransformer.h">
       <Filter>Header Files\FilesTransform</Filter>
     </ClInclude>
     <ClInclude Include="ChaChaFilter.h">
       <Filter>Header Files\FilesTransform</Filter>
     </ClInclude>
+    <ClInclude Include="TnxGuard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="WildCardNameChecker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TnxGuard.h">
+    <ClInclude Include="basen.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fpaq.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bocu1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -125,9 +131,6 @@
     <ClCompile Include="PathEncoder.cpp">
       <Filter>Source Files\FilesTransform</Filter>
     </ClCompile>
-    <ClCompile Include="utf16_compress.cpp">
-      <Filter>Source Files\FilesTransform</Filter>
-    </ClCompile>
     <ClCompile Include="FilesTransformer.cpp">
       <Filter>Source Files\FilesTransform</Filter>
     </ClCompile>
@@ -142,6 +145,15 @@
     </ClCompile>
     <ClCompile Include="TestMain.cpp">
       <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="PathEncoderTest.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="fpaq.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bocu1.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

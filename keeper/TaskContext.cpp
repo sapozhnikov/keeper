@@ -11,7 +11,6 @@ namespace keeper
 {
 	static char* PARAM_COMPRESSION = "COMPRESSION RATIO";
 	static char* PARAM_FILES_ENCODE_KEY = "FILES ENCODE KEY";
-	//static char* PARAM_FILES_ENCODE_NONCE = "FILES ENCODE NONCE";
 	static char* PARAM_NAMES_ENCODE = "NAMES ENCODE";
 	static char* PARAM_NAMES_ENCODE_KEY = "NAMES ENCODE KEY";
 	static char* PARAM_NAMES_ENCODE_NONCE = "NAMES ENCODE NONCE";
@@ -203,7 +202,7 @@ namespace keeper
 		env_->set_cachesize(0, ENV_CACHE_SIZE, 1);
 		env_->set_lg_bsize(LOG_BUF_SIZE);
 		env_->set_lg_max(LOG_FILE_SIZE);
-		env_->log_set_config(/*DB_LOG_AUTO_REMOVE |*/ DB_LOG_DIRECT, 1);
+		env_->log_set_config(DB_LOG_AUTO_REMOVE | DB_LOG_DIRECT, 1);
 		if (!DbPassword.empty())
 		{
 			if (DbKey.empty())

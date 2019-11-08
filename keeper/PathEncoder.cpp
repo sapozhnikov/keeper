@@ -2,85 +2,37 @@
 #include "PathEncoder.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
-#include "utf16_compress.h"
-
-#define _SCL_SECURE_NO_WARNINGS
+#include "basen.hpp"
+#include "fpaq.h"
 
 using namespace std;
 using namespace keeper;
 
-//bool SplitPath(const std::wstring & path, vector<wstring>& result)
-//{
-//	result.clear();
-//	//turn off SDL checks for this
-//	boost::split(result, path, boost::is_any_of(L"\\"));
-//	return true;
-//}
-
-//int CompressString(const std::wstring & inStr, byte* result)
-//{
-//	auto lengthCompressed = utf16_compress((u16*)inStr.c_str(), inStr.length(), result);
-//	return lengthCompressed;
-//}
-
-wstring PathEncoder::BinToString(byte* buf, unsigned int length)
+wstring PathEncoder::BinToString(byte* buf, size_t length)
 {
-	using namespace boost::multiprecision;
-
-	vector<unsigned char> binaryVector(buf, buf + length);
-	//for (auto b : binData)
-	//	binaryVector.push_back(b);
-
-	cpp_int binaryInt;
-	import_bits(binaryInt, binaryVector.begin(), binaryVector.end());
-
-	cpp_int quotient, remainder, outputCharsCount;
-	const auto charsSetCount = wcslen(ENCODED_NAME_CHARS);
-	outputCharsCount = charsSetCount;
 	wstring outputString;
-	while (true)
-	{
-		if (binaryInt < outputCharsCount)
-		{
-			outputString += ENCODED_NAME_CHARS[binaryInt.convert_to<unsigned char>()];
-			break;
-		}
-		divide_qr(binaryInt, outputCharsCount, quotient, remainder);
-		binaryInt = quotient;
-		outputString += ENCODED_NAME_CHARS[remainder.convert_to<unsigned char>()];
-	}
+	outputString.reserve(size_t(length * 1.7)); //160% data grown for base32
+	bn::encode_b32(buf, buf + length, back_inserter(outputString));
 	return outputString;
 }
 
-unsigned int PathEncoder::StringToBin(const std::wstring & s, byte * buf)
+size_t PathEncoder::StringToBin(const std::wstring & s, byte * buf)
 {
-	using namespace boost::multiprecision;
+	//decode_b32 don't work with unicode, so, convert it to OEM
+	int length = ::WideCharToMultiByte(CP_OEMCP, 0, s.c_str(), s.size(), NULL, 0, NULL, NULL);
+	if (length <= 0)
+		return 0;
+	std::vector<char> buffer(length);
+	::WideCharToMultiByte(CP_OEMCP, 0, s.c_str(), s.size(), buffer.data(), length, NULL, NULL);
+	std::string narrowedStr(buffer.begin(), buffer.end());
 
-	cpp_int binaryInt = 0;
-	unsigned int position;
-	const auto inStrLen = s.length();
-	const auto charsSetCount = wcslen(ENCODED_NAME_CHARS);
-	for (unsigned int i = 0; i < inStrLen; i++)
-	{
-		for (position = 0; position < charsSetCount; position++)
-		{
-			if (s[inStrLen - i - 1] == ENCODED_NAME_CHARS[position])
-			{
-				binaryInt = binaryInt * charsSetCount + position;
-				break;
-			}
-		}
-		if (position == charsSetCount)
-			throw exception("Unexpected character in the encrypted file name");
-	}
-	
-	vector<byte> binaryVector;
-	export_bits(binaryInt, back_inserter(binaryVector), 8);
-	//std::copy(binaryVector.begin(), binaryVector.end(), buf);
-	std::copy(binaryVector.begin(), binaryVector.end(), stdext::checked_array_iterator<byte*>(buf, compressBufferSize_));
+	assert(s.length() == narrowedStr.length());
 
-	return binaryVector.size();
+	std::vector<byte> tmpBuf;
+	tmpBuf.reserve(size_t(length / 1.5)); //160% data grown for base32
+	bn::decode_b32(narrowedStr.c_str(), narrowedStr.c_str() + narrowedStr.size(), back_inserter(tmpBuf));
+	memcpy(buf, tmpBuf.data(), tmpBuf.size());
+	return tmpBuf.size();
 }
 
 //PathEncoder::PathEncoder(const byte * key, const byte * iv)
@@ -88,7 +40,8 @@ PathEncoder::PathEncoder(const TaskContext& ctx)
 {
 	//fixme: possibly OutOfRange error with very long filename
 	compressBuffer_ = make_unique<byte[]>(compressBufferSize_);
-	charsBuffer_ = make_unique<wchar_t[]>(32767 * sizeof(wchar_t));
+	bocu1Buffer_ = make_unique<byte[]>(compressBufferSize_);
+	charsBuffer_ = make_unique<wchar_t[]>(MAX_PATH_LENGTH * sizeof(wchar_t));
 
 	memcpy(key_, ctx.NamesEncodeKey_, crypto_stream_chacha20_KEYBYTES);
 	memcpy(nonce_, ctx.NamesEncodeNonce_, crypto_stream_chacha20_NONCEBYTES);
@@ -125,62 +78,59 @@ void PathEncoder::AddNameToCache(const std::wstring & cachedKey, const std::wstr
 std::wstring PathEncoder::encode(const std::wstring & path)
 {
 	vector<wstring> fileNames, fileNamesEncoded;
-	//SplitPath(path, fileNames);
-	//boost::split(fileNames, path, boost::is_any_of(L"\\"));
-	boost::split(fileNames, path, std::bind2nd(std::equal_to<wchar_t>(), L'\\'));
+
+	boost::split(fileNames, path, [](wchar_t ch) -> bool { return ch == L'\\'; });
+	if (fileNames.size() > NameCacheSize)
+		NameCacheSize = fileNames.size();
 	std::wstring cachedName;
 	for (const auto& fileName : fileNames)
 	{
 		cachedName = GetCachedName(fileName);
 		if (cachedName.empty())
 		{
-			//compress UCS-2 string
-			//int lengthCompressed = CompressString(fileName, compressBuffer_.get());
-			auto lengthCompressed = utf16_compress((u16*)fileName.c_str(), fileName.length(), compressBuffer_.get());
+			//compressing UCS-2 string
+			//Unicode -> BOCU-1
+			unsigned int lengthCompressed = BOCU1::writeString(fileName.c_str(), fileName.length(), bocu1Buffer_.get());
+			//BOCU-1 -> fpaq compressing
+			lengthCompressed = fpaq::fpaqCompress(bocu1Buffer_.get(), lengthCompressed, compressBuffer_.get());
 			//encrypt
 			crypto_stream_chacha20_xor_ic(compressBuffer_.get(), compressBuffer_.get(), lengthCompressed, nonce_, 0, key_);
-			//convert to string
+			//convert to BASE32 string
 			cachedName = BinToString(compressBuffer_.get(), lengthCompressed);
 			AddNameToCache(fileName, cachedName);
 		}
 		fileNamesEncoded.push_back(cachedName);
 	}
 	
-	//std::wostringstream s;
-	//for (const auto& fileName : fileNamesEncoded)
-	//{
-	//	if (&fileName != &fileNamesEncoded[0])
-	//		s << L'\\';
-	//	s << fileName;
-	//}
-	//return s.str();
 	return boost::join(fileNamesEncoded, L"\\");
 }
 
 std::wstring PathEncoder::decode(const std::wstring & path)
 {
 	vector<wstring> fileNamesEncoded, fileNamesDecoded;
-	//boost::split(fileNamesEncoded, path, boost::is_any_of(L"\\"));
-	boost::split(fileNamesEncoded, path, std::bind2nd(std::equal_to<wchar_t>(), L'\\'));
+
+	boost::split(fileNamesEncoded, path, [](wchar_t ch) -> bool { return ch == L'\\'; });
+	if (fileNamesEncoded.size() > NameCacheSize)
+		NameCacheSize = fileNamesEncoded.size();
 	std::wstring cachedName;
 	for (const auto& fileName : fileNamesEncoded)
 	{
 		cachedName = GetCachedName(fileName);
 		if (cachedName.empty())
 		{
-			//string to binary
+			//BASE32 string to binary
 			auto lengthBin = StringToBin(fileName, compressBuffer_.get());
 			//decrypt
 			crypto_stream_chacha20_xor_ic(compressBuffer_.get(), compressBuffer_.get(), lengthBin, nonce_, 0, key_);
 			//decompress
-			auto lengthDecompressed = utf16_decompress((u8 *)compressBuffer_.get(), lengthBin, (u16 *)charsBuffer_.get());
+			unsigned int lengthDecompressed = fpaq::fpaqDecompress(compressBuffer_.get(), lengthBin, bocu1Buffer_.get());
+			lengthDecompressed = BOCU1::readString(bocu1Buffer_.get(), lengthDecompressed, charsBuffer_.get());
 			//convert to string
-			cachedName = std::wstring(charsBuffer_.get(), lengthDecompressed / 2);
+			assert((lengthDecompressed & 1) == 0);
+			cachedName = std::wstring(charsBuffer_.get(), lengthDecompressed);
 			AddNameToCache(fileName, cachedName);
 		}
 		fileNamesDecoded.push_back(cachedName);
 	}
 	return boost::join(fileNamesDecoded, L"\\");
 }
-
-

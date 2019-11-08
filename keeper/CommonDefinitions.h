@@ -11,12 +11,11 @@ const char * const EVENTS_DB_TABLE = "events";
 const char * const CONFIG_DB_TABLE = "config";
 const wchar_t * const NAME_SUFFIX_COMPRESSED = L".bz2";
 const wchar_t * const NAME_SUFFIX_ENCRYPTED = L".encrypted";
-//you can add here anything you want
-const wchar_t* const ENCODED_NAME_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!~.$()";
 const wchar_t MASKS_SEPARATOR = L';';
 const unsigned int LOG_FILE_SIZE = 128 * 1024 * 1024; //DB log max file size
 const unsigned int LOG_BUF_SIZE = 1024 * 1024; //DB log buffer
 const unsigned int ENV_CACHE_SIZE = 16 * 1024 * 1024; //DB memory pool
+const unsigned int MAX_PATH_LENGTH = 32767;
 
 template <typename T> int sgn(T val) {
 	return (T(0) < val) - (val < T(0));

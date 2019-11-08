@@ -226,12 +226,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="basen.hpp" />
+    <ClInclude Include="bocu1.h" />
     <ClInclude Include="ChaChaFilter.h" />
     <ClInclude Include="CLIparser.h" />
     <ClInclude Include="CommonDefinitions.h" />
     <ClInclude Include="ConsoleLogger.h" />
     <ClInclude Include="FileIO.h" />
     <ClInclude Include="FilesTransformer.h" />
+    <ClInclude Include="fpaq.h" />
     <ClInclude Include="GlobalUtils.h" />
     <ClInclude Include="PathEncoder.h" />
     <ClInclude Include="TaskContext.h" />
@@ -243,14 +246,18 @@
     <ClInclude Include="TaskPurge.h" />
     <ClInclude Include="TaskRestore.h" />
     <ClInclude Include="TnxGuard.h" />
-    <ClInclude Include="utf16_compress.h" />
     <ClInclude Include="WildCardNameChecker.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="bocu1.cpp">
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Doctest debug x86|Win32'">false</PreprocessToFile>
+    </ClCompile>
     <ClCompile Include="CLIparser.cpp" />
     <ClCompile Include="ConsoleLogger.cpp" />
     <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="FilesTransformer.cpp" />
+    <ClCompile Include="fpaq.cpp" />
+    <ClCompile Include="PathEncoderTest.cpp" />
     <ClCompile Include="TestMain.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -271,7 +278,6 @@
     <ClCompile Include="TaskPurge.cpp" />
     <ClCompile Include="TaskRestore.cpp" />
     <ClCompile Include="TnxGuard.cpp" />
-    <ClCompile Include="utf16_compress.cpp" />
     <ClCompile Include="WildCardNameChecker.cpp" />
     <ClCompile Include="WildCardNamesCheckerTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
