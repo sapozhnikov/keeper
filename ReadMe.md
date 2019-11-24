@@ -1,6 +1,6 @@
 # BURO - freeware command line incremental backup utility for MS Windows.<p> #
 <p align="center"><img src="logo_buro.png"/></p>
-BURO supports data compression and encryption. You can access all your files and it's previous versions with your favorite file manager. Access to your saved data no longer a stress!<p>
+BURO supports data compression and encryption. You can access all your files and it's previous versions with your favorite file manager.<p>
  
 [Click here to download](https://github.com/sapozhnikov/keeper/releases "Downloads page")
 >I'll be very appreciated if someone will help me to correct this translation. Dmitriy.
@@ -23,7 +23,7 @@ new repository will be created at the *destination directory*:
 
 >buro.db<p>
 
-If you change *file1* and run the same command like above, *file1* will be moved to the folder, named as current time, and changed file will be copied to *mirror* folder. Example:
+If you change *file1* and run the same command again, *file1* will be moved to the folder, named as current time, and changed file will be copied to *mirror* folder. Example:
 ><2017-08-31T00-37-12.048\><p>
 >>file1 <-old file<p>
 >
@@ -54,10 +54,10 @@ Extension ".encrypted" will be added to the names at *destination directory* and
 >fileN.encrypted<p>
 
 With argument *--encryptnames* file names will encrypted and looks like a garbage:<br>
->fZ2qYcAjWb<br>
->QY2qYcAjWb<br>
+>DXJKXWIXMQ<br>
+>DXJKXWIXQY<br>
 >...<br>
->TY2qYcAjWb<br>
+>DXJKXWLFKE<br>
 
 You can combine *--compress* and *--password* arguments.<p>
 ## How to restore ##
@@ -68,17 +68,15 @@ Restoring is simple:<p>
 Argument *srcdir* is pointing to the repository folder. Latest state of the files will be restored. If you want to restore files state at the given time, define it with argument *--timestamp*. Time's format is "YYYY-MM-DD
 HH:mm:SS.SSS".<p>
 Do not forget to define password with argument *--password*, if backup was protected with password, or restoring will fail.<p>
-## How to delete old changes ##
-You can delete old changes to save disk space:<p>
+## How to delete old diffs ##
+You can delete old diffs to save disk space:<p>
 >buro --purge --srcdir="<source directory\>" --older=<period or date\><p>
 
-Argument *srcdir* is pointing to the repository folder. You can define the date (format is "YYYY-MM-DD HH:mm:SS.SSS") or period (format is "PxYxMxDTxHxMxS"). For example, older than 1 month - P1M, older than 1 minute - PT1M, older than 1 year - P1Y, one month and 5 days - P1M5D.<p>
+Argument *srcdir* is pointing to the repository folder. You can define the date (format is "YYYY-MM-DD HH:mm:SS.SSS") or period (format is "PxYxMxDTxHxMxS"). For example, older than 1 month is "P1M", older than 1 minute is "PT1M", older than 1 year is "P1Y", one month and 5 days is "P1M5D".<p>
 
 ### Filtering ###
-It's possible to exclude some directories or files while backuping or restoring. Wildmasks "*" and "?" are supported. You can define more than one mask, just separate them with symbol ";". If argument *--include* is defined, only matched files will be proceeded. If argument *--exclude* is defined, matched files will be skipped. Examples:
+It is possible to exclude some directories or files while backuping or restoring. Wildmasks "*" and "?" are supported. You can define more than one mask, just separate them with symbol ";". If argument *--include* is defined, only matched files will be proceeded. If argument *--exclude* is defined, matched files will be skipped. Examples:
 >buro --backup --srcdir="<source directory\>" --dstdir="<destination directory\>" --exclude="\*.tmp;\*.bak"<p>
 >buro --restore --srcdir="<source directory\>" --dstdir="<destination directory\>" --include="documents\*"<p>
 
 <br/><br/>
-
-[![Buy Me a Coffee at ko-fi.com](https://az743702.vo.msecnd.net/cdn/kofi1.png?v=0)](https://ko-fi.com/X8X38KQD)  
