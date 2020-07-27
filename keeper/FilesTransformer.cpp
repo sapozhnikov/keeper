@@ -5,14 +5,13 @@
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/bzip2.hpp>
+#include <boost/iostreams/filter/lzma.hpp>
 
 using namespace ConsoleLogger;
 
 namespace keeper
 {
 	FilesTransformer::FilesTransformer(const TaskContext & ctx) :
-		//pathEncoder(ctx.NamesEncodeKey_, ctx.NamesEncodeNonce_),
 		pathEncoder(ctx),
 		ctx_(ctx)
 	{
@@ -94,11 +93,11 @@ namespace keeper
 				outFile.write(reinterpret_cast<const char*>(FileEncryptNonce), crypto_stream_chacha20_NONCEBYTES);
 			}
 			boost::iostreams::filtering_streambuf<boost::iostreams::output> outStream;
-			bzip2_params bz2Param;
+			boost::iostreams::lzma_params lzmaParams;
 			if (isFileCompressed)
 			{
-				bz2Param.block_size = ctx_.CompressionLevel;
-				outStream.push(boost::iostreams::bzip2_compressor(bz2Param));
+				lzmaParams.level = ctx_.CompressionLevel;
+				outStream.push(boost::iostreams::lzma_compressor(lzmaParams));
 			}
 			if (isFileEncrypted)
 				outStream.push(ChaCha20filter(FileEncryptKey, FileEncryptNonce));
@@ -137,7 +136,7 @@ namespace keeper
 			if (isFileEncrypted)
 				outStream.push(ChaCha20filter(FileEncryptKey, FileEncryptNonce));
 			if (isFileCompressed)
-				outStream.push(boost::iostreams::bzip2_decompressor());
+				outStream.push(boost::iostreams::lzma_decompressor());
 			outStream.push(outFile);
 
 			boost::iostreams::copy(inFile, outStream);

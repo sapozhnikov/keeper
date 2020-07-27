@@ -28,12 +28,12 @@
     <Filter Include="Tests">
       <UniqueIdentifier>{df74a085-a161-423f-9a6b-cf0b6871b483}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\boost">
+      <UniqueIdentifier>{4aa67b19-88bb-4f7a-b285-cb1e9495f2e3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CLIparser.h">
@@ -91,6 +91,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="bocu1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -154,6 +157,9 @@
     </ClCompile>
     <ClCompile Include="bocu1.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\libs\boost_1_73_0\libs\iostreams\src\lzma.cpp">
+      <Filter>Source Files\boost</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
