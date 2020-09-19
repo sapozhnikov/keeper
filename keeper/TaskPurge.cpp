@@ -96,6 +96,8 @@ bool TaskPurge::Run()
 				break;
 		}
 	}
+	mainCursor->close();
+	tnxGuard.Commit();
 
 	if (!deletedDirsTimestamps64.empty())
 	{
@@ -124,6 +126,10 @@ bool TaskPurge::Run()
 	std::vector<std::wstring> filesToDelete;
 	std::wstring restoredRelativePath;
 
+	Dbc* mainCursor2;
+	TnxGuard tnxGuard2(ctx_.GetEnv());
+	ctx_.GetMainDB().cursor(tnxGuard2.Get(), &mainCursor2, 0);
+
 	while (true)
 	{
 		if (dirIterator == boost::filesystem::recursive_directory_iterator())
@@ -136,12 +142,12 @@ bool TaskPurge::Run()
 		Dbt key = keeper::WstringToDbt(restoredRelativePath);
 		Dbt data;
 
-		result = mainCursor->get(&key, &data, DB_SET);
+		result = mainCursor2->get(&key, &data, DB_SET);
 		if (result == 0)
 		{
 			while (true)
 			{
-				result = mainCursor->get(&key, &data, DB_NEXT_DUP);
+				result = mainCursor2->get(&key, &data, DB_NEXT_DUP);
 				if (result == DB_NOTFOUND)
 					break;
 				//TODO: result check
@@ -157,6 +163,8 @@ bool TaskPurge::Run()
 			}
 		++dirIterator;
 	}
+	mainCursor2->close();
+	tnxGuard2.Commit();
 
 	for (const auto& filename : filesToDelete)
 	{
