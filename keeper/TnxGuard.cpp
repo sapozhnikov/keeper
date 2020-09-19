@@ -9,7 +9,7 @@ TnxGuard::TnxGuard(DbEnv& env) :
 
 TnxGuard::~TnxGuard()
 {
-	if (!isAborted_ && (txn_ != nullptr))
+	if (!isAborted_ && !isCommited_ && (txn_ != nullptr))
 		txn_->commit(0);
 }
 
@@ -18,9 +18,16 @@ DbTxn* TnxGuard::Get()
 	return txn_;
 }
 
+void TnxGuard::Commit()
+{
+	if (!isAborted_ && !isCommited_ && (txn_ != nullptr))
+		txn_->commit(0);
+	isCommited_ = true;
+}
+
 void TnxGuard::Abort()
 {
-	if (txn_ != nullptr)
+	if (!isAborted_ && !isCommited_ && (txn_ != nullptr))
 		txn_->abort();
 	isAborted_ = true;
 }

@@ -161,6 +161,9 @@
     <ClCompile Include="..\..\..\..\libs\boost_1_73_0\libs\iostreams\src\lzma.cpp">
       <Filter>Source Files\boost</Filter>
     </ClCompile>
+    <ClCompile Include="DbCompressTest.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="keeper.rc">

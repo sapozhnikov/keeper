@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Doctest debug x86|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -103,8 +103,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Doctest debug x86|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\libs\doctest-2.3.5;D:\libs\libsodium\include;D:\libs\db-18.1.25\build_windows;D:\libs\boost_1_70_0;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\libs\libsodium\Win32\Debug\v140\static;D:\libs\db-18.1.25\build_windows\Win32\Static Debug;D:\libs\boost_1_70_0\stage\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\libs\xz-5.2.5\src\liblzma\api;D:\libs\doctest-2.3.5;D:\libs\libsodium\include;D:\libs\db-18.1.25\build_windows;D:\libs\boost_1_73_0;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\libs\libsodium\Win32\Debug\v140\static;D:\libs\db-18.1.25\build_windows\Win32\Static Debug;D:\libs\boost_1_73_0\stage\lib;D:\libs\xz-5.2.5\windows\vs2019\ReleaseMT\Win32\liblzma;$(LibraryPath)</LibraryPath>
     <TargetName>buro</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -149,7 +149,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;LZMA_API_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DisableSpecificWarnings>
@@ -158,7 +158,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libdb181sd.lib;libsodium.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libdb181sd.lib;libsodium.lib;Ws2_32.lib;liblzma.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -253,12 +253,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Doctest debug x86|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="bocu1.cpp">
       <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Doctest debug x86|Win32'">false</PreprocessToFile>
     </ClCompile>
     <ClCompile Include="CLIparser.cpp" />
     <ClCompile Include="ConsoleLogger.cpp" />
+    <ClCompile Include="DbCompressTest.cpp" />
     <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="FilesTransformer.cpp" />
     <ClCompile Include="fpaq.cpp" />

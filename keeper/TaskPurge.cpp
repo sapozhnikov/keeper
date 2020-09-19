@@ -4,9 +4,9 @@
 #include <boost\scope_exit.hpp>
 #include <set>
 #include <vector>
-//#include <boost\filesystem.hpp>
 #include "FileIO.h"
 #include "FilesTransformer.h"
+#include "TnxGuard.h"
 
 using namespace keeper;
 using namespace ConsoleLogger;
@@ -41,7 +41,9 @@ bool TaskPurge::Run()
 
 	Dbc* mainCursor;
 	Dbt keyMain, dataMain;
-	ctx_.GetMainDB().cursor(nullptr, &mainCursor, 0);
+	TnxGuard tnxGuard(ctx_.GetEnv());
+
+	ctx_.GetMainDB().cursor(tnxGuard.Get(), &mainCursor, 0);
 	BOOST_SCOPE_EXIT_ALL(&)
 	{
 		if (mainCursor != nullptr)
