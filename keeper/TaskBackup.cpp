@@ -166,16 +166,19 @@ void TaskBackup::Run()
 			}
 		}
 		dirIterator_.increment(errCode);
-		if (errCode) //failed to enter directory
+		while(errCode)
 		{
-			if (isDirectory)
+			if (isDirectory) //failed to enter directory
 			{
 				LOG_ERROR() << "No access to " << dirIterator_->path().wstring() << std::endl;
 				dirIterator_.no_push();
-				++dirIterator_;
+				dirIterator_.increment(errCode);
 			}
 			else
 				throw std::runtime_error(errCode.message());
+
+			if (dirIterator_ == recursive_directory_iterator())
+				break;
 		}
 	}
 
