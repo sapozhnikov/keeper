@@ -97,6 +97,7 @@ namespace keeper
 			if (isFileCompressed)
 			{
 				lzmaParams.level = ctx_.CompressionLevel;
+				lzmaParams.threads = ctx_.Threads;
 				outStream.push(boost::iostreams::lzma_compressor(lzmaParams));
 			}
 			if (isFileEncrypted)

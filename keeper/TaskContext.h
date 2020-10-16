@@ -36,6 +36,7 @@ namespace keeper
 		DbEnv& GetEnv();
 
 		DWORD CompressionLevel = 0;
+		unsigned int Threads = 0; //number ot threads for boost::iostreams::lzma_compressor
 		std::string DbPassword;
 		byte FileEncodeKey_[crypto_stream_chacha20_KEYBYTES];
 		bool isEncryptedFileNames = false;

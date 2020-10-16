@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include <iostream>
+#include <thread>
+
 #pragma warning(push)
 #pragma warning(disable:4459)
 #include <boost\program_options.hpp>
@@ -37,7 +39,8 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 	backupDesc.add_options()
 		("srcdir,S", wvalue<std::wstring>(), "full path to directory to backup")
 		("dstdir,D", wvalue<std::wstring>(), "full path to directory there data will be stored")
-		("compress", value<unsigned int>()->implicit_value(5), "compress files (1-faster, ..., 9-slower)");
+		("compress", value<unsigned int>()->implicit_value(5), "compress files (1-faster, ..., 9-slower)")
+		("threads", value<unsigned int>(), "number of threads used for compression. if threads=0, than number of threads will be equal to number of CPU cores");
 
 	options_description restoreDesc("Restore options");
 	restoreDesc.add_options()
@@ -163,6 +166,18 @@ bool ParseCLITask(keeper::TaskContext& ctx, int argc, wchar_t *argv[])
 				ctx.CompressionLevel = varMapBackup["compress"].as<unsigned int>();
 			else
 				ctx.CompressionLevel = 0;
+
+			if (ctx.CompressionLevel != 0)
+			{
+				if (varMapBackup.count("threads"))
+				{
+					ctx.Threads = varMapBackup["threads"].as<unsigned int>();
+					if (ctx.Threads == 0)
+						ctx.Threads = std::thread::hardware_concurrency();
+				}
+				else
+					ctx.Threads = 1;
+			}
 
 			ctx.Task = keeper::Task::Backup;
 
